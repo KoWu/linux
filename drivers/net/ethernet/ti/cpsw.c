@@ -2266,6 +2266,8 @@ static int cpsw_probe(struct platform_device *pdev)
 		goto clean_ndev_ret;
 	}
 
+    gpiod_set_value(mode->desc[0], 1);
+
 	/*
 	 * This may be required here for child devices.
 	 */
