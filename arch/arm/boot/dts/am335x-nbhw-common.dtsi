@@ -313,7 +313,7 @@
 	pinctrl-0 = <&i2c0_pins>;
 
 	status = "okay";
-	clock-frequency = <400000>;
+	clock-frequency = <100000>;
 
 	tps65218: tps65218@24 {
 		reg = <0x24>;
@@ -396,6 +396,7 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&davinci_mdio_default>;
 	pinctrl-1 = <&davinci_mdio_sleep>;
+	bus_freq = <2000000>;
 	status = "okay";
 };
 
