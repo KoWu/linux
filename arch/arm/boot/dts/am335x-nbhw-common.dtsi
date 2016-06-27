@@ -74,7 +74,7 @@
 &am33xx_pinmux {
 	pinctrl-names = "default";
 	pinctrl-0 = <&clkout2_pin>;
-	pinctrl-0 = <&bootloader_pinmux>;
+//	pinctrl-0 = <&bootloader_pinmux>;
 
 	bootloader_pinmux: bootloader_pinmux {
 		pinctrl-single,pins = <
@@ -102,8 +102,8 @@
 
 	i2c0_pins: pinmux_i2c0_pins {
 		pinctrl-single,pins = <
-			0x18c ( PIN_INPUT | MUX_MODE0 ) /* (C16) I2C0_SCL.I2C0_SCL */
-			0x188 ( PIN_INPUT | MUX_MODE0 ) /* (C17) I2C0_SDA.I2C0_SDA */
+			0x18c ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (C16) I2C0_SCL.I2C0_SCL */
+			0x188 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (C17) I2C0_SDA.I2C0_SDA */
 		>;
 	};
 
@@ -401,13 +401,16 @@
 };
 
 &mmc1 {
+	compatible = "ti,am33xx-hsmmc";
 	vmmc-supply = <&vmmcsd_fixed>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdio_wlan_pins>;
 	bus-width = <0x4>;
 	status = "okay";
 	ti,non-removable;
-
+	ti,no_idle_on_suspend;
+	cap-power-off-card;
+	keep-power-in-suspend;
 	#address-cells = <1>;
 	#size-cells = <0>;
 	wlcore: wlcore@2 {
@@ -420,21 +423,28 @@
 };
 
 &mmc2 {
+	compatible = "ti,am33xx-hsmmc";
 	vmmc-supply = <&vmmcsd_fixed>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&emmc_pins>;
 	bus-width = <8>;
 	status = "okay";
 };
+
 &rtc {
-	compatible = "none";
-	ti,no-init;
-	ti,hwmods = "";
+	status = "disabled";
+	ti,hwmods = "disabled";
 };
+
 &wdt2 {
-	compatible = "none";
-	ti,no-init;
-	ti,hwmods = "";
+	status = "disabled";
+	ti,hwmods = "disabled";
+};
+
+&timer1 {
+	ti,no-reset-on-init;
+	ti,no-idle-on-init;
+	ti,no_idle_on_suspend;
 };
 
 // We dont want to lose the gpio state that was set in u-boot
