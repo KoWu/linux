@@ -441,13 +441,13 @@
 };
 
 &rtc {
+	ti,hwmod-disabled;
 	status = "disabled";
-	ti,hwmods = "disabled";
 };
 
 &wdt2 {
+	ti,hwmod-disabled;
 	status = "disabled";
-	ti,hwmods = "disabled";
 };
 
 &timer1 {
