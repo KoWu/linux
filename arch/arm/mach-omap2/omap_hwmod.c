@@ -2080,6 +2080,10 @@ static int _enable(struct omap_hwmod *oh)
 	int r;
 	int hwsup = 0;
 
+	if (oh->_state == _HWMOD_STATE_NOT_AVAILABLE ) {
+		return 0;
+	}
+
 	pr_debug("omap_hwmod: %s: enabling\n", oh->name);
 
 	/*
@@ -2200,6 +2204,10 @@ static int _enable(struct omap_hwmod *oh)
  */
 static int _idle(struct omap_hwmod *oh)
 {
+	if (oh->_state == _HWMOD_STATE_NOT_AVAILABLE) {
+		return 0;
+	}
+
 	pr_debug("omap_hwmod: %s: idling\n", oh->name);
 
 	if (oh->_state != _HWMOD_STATE_ENABLED) {
@@ -2484,6 +2492,14 @@ static int __init _init(struct omap_hwmod *oh, void *data)
 		else if (np && index)
 			pr_warn("omap_hwmod: %s using broken dt data from %s\n",
 				oh->name, np->name);
+	}
+
+	if (np) {
+		if (of_find_property(np, "ti,hwmod-disabled", NULL)) {
+			pr_debug("omap_hwomd: %s is disabled, set to not available\n", oh->name);
+			oh->_state = _HWMOD_STATE_NOT_AVAILABLE;
+			return 0;
+		}
 	}
 
 	r = _init_mpu_rt_base(oh, NULL, index, np);
