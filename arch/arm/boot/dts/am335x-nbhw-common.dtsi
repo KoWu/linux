@@ -59,15 +59,25 @@
 		};
 	};
 
-	vmmcsd_fixed: fixedregulator@0 {
+	wlan_fixed: fixedregulator@0 {
+		compatible = "regulator-fixed";
+		regulator-name = "wlan_fixed";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+
+		gpio = <&gpio3 10 GPIO_ACTIVE_HIGH>;
+
+		startup-delay-us = <70000>;
+		enable-active-high;
+	};
+
+	vmmcsd_fixed: fixedregulator@1 {
 		compatible = "regulator-fixed";
 		regulator-name = "vmmcsd_fixed";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		enable-active-high;
-		regulator-boot-on;
-		gpio = <&gpio3 10 0>;
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
 	};
+
 
 };
 
@@ -188,9 +198,9 @@
 			0xf4 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (F18) mmc0_dat2.mmc0_dat2 */
 			0xf0 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (F17) mmc0_dat3.mmc0_dat3 */
 
-			0x118 ( PIN_OUTPUT | MUX_MODE7 ) /* (J17) gmii1_rxdv.gpio3[4] */ /* BT_EN */
-			0x12c ( PIN_INPUT_PULLUP | MUX_MODE7 ) /* (K18) gmii1_txclk.gpio3[9] */ /* WLAN_IRQ */
-			0x130 ( PIN_OUTPUT | MUX_MODE7 ) /* (L18) gmii1_rxclk.gpio3[10] */ /* WLAN_EN */
+			0x118 ( PIN_OUTPUT_PULLDOWN | MUX_MODE7 ) /* (J17) gmii1_rxdv.gpio3[4] */ /* BT_EN */
+			0x12c ( PIN_INPUT| MUX_MODE7 ) /* (K18) gmii1_txclk.gpio3[9] */ /* WLAN_IRQ */
+			0x130 ( PIN_OUTPUT_PULLDOWN | MUX_MODE7 ) /* (L18) gmii1_rxclk.gpio3[10] */ /* WLAN_EN */
 		>;
 	};
 
@@ -401,16 +411,16 @@
 };
 
 &mmc1 {
-	compatible = "ti,am33xx-hsmmc";
-	vmmc-supply = <&vmmcsd_fixed>;
+	vmmc-supply = <&wlan_fixed>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdio_wlan_pins>;
 	bus-width = <0x4>;
 	status = "okay";
 	ti,non-removable;
-	ti,no_idle_on_suspend;
+	ti,needs-special-hs-handling;
 	cap-power-off-card;
 	keep-power-in-suspend;
+
 	#address-cells = <1>;
 	#size-cells = <0>;
 	wlcore: wlcore@2 {
@@ -423,7 +433,6 @@
 };
 
 &mmc2 {
-	compatible = "ti,am33xx-hsmmc";
 	vmmc-supply = <&vmmcsd_fixed>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&emmc_pins>;
