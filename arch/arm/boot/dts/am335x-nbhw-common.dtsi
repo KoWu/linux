@@ -228,13 +228,13 @@
 
 	usb_expansion_pins: usb_expansion_pins {
 		pinctrl-single,pins = <
-			0x21c ( PIN_OUTPUT_PULLDOWN | MUX_MODE0 ) /* (F16) USB0_DRVVBUS.USB0_DRVVBUS */
+			0x21c ( PIN_INPUT_PULLDOWN | MUX_MODE0 ) /* (F16) USB0_DRVVBUS.USB0_DRVVBUS */
 		>;
 	};
 
 	usb_gsm_pins: usb_gsm_pins {
 		pinctrl-single,pins = <
-			0x234 ( PIN_OUTPUT_PULLDOWN | MUX_MODE0 ) /* (F15) USB1_DRVVBUS.USB1_DRVVBUS */
+			0x234 ( PIN_INPUT_PULLDOWN | MUX_MODE0 ) /* (F15) USB1_DRVVBUS.USB1_DRVVBUS */
 		>;
 	};
 
@@ -290,6 +290,8 @@
 };
 
 &usb1_phy {
+	pinctrl-names = "default";
+	pinctrl-0 =  <&usb_expansion_pins>;
 	status = "okay";
 };
 
