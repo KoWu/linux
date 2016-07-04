@@ -316,6 +316,12 @@
 	status = "okay";
 	clock-frequency = <100000>;
 
+	eeprom: at24@50 {
+		compatible = "at24,24c64";
+		pagesize = <8>;
+		reg = <0x50>;
+	};
+
 	tps65218: tps65218@24 {
 		reg = <0x24>;
 		compatible = "ti,tps65218";
