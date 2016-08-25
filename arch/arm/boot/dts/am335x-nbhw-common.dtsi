@@ -275,6 +275,13 @@
 	status = "okay";
 };
 
+&uart5 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&bt_uart_pins>;
+
+	status = "okay";
+};
+
 &usb {
 	status = "okay";
 };
