@@ -78,7 +78,26 @@
 		regulator-max-microvolt = <1800000>;
 	};
 
+	gsm_codec: gtm601_codec {
+		compatible = "option,gtm601";
+		#sound-dai-cells = <0>;
+	};
 
+	sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "AM335x-GSM";
+		simple-audio-card,bitclock-master = <&sound_master>;
+		simple-audio-card,frame-master = <&sound_master>;
+		simple-audio-card,format = "i2s";
+
+		simple-audio-card,cpu {
+			sound-dai = <&mcasp0>;
+		};
+
+		sound_master: simple-audio-card,codec {
+			sound-dai = <&gsm_codec>;
+		};
+	};
 };
 
 &am33xx_pinmux {
@@ -380,6 +399,24 @@
 			regulator-always-on;
 		};
 	};
+};
+
+&mcasp0 {
+	#sound-dai-cells = <0>;
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&pcm_pins>;
+	pinctrl-1 = <&pcm_pins>;
+
+	status = "okay";
+
+	op-mode = <1>;          /* S/PDIF */
+	tdm-slots = <1>;
+	/* 4 serializers */
+	serial-dir = <  /* 0: INACTIVE, 1: TX, 2: RX */
+		1 2 0 0
+	>;
+	tx-num-evt = <32>;
+	rx-num-evt = <32>;
 };
 
 &cpsw_emac0 {
