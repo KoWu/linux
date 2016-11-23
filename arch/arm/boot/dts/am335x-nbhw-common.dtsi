@@ -37,14 +37,23 @@
 			default-state = "off";
 		};
 
-		led@3 {
-			label = "nb:green:ledc";
-			gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
-			default-state = "off";
-		};
+// Use it as PWM for some tests
+//		led@3 {
+//			label = "nb:green:ledc";
+//			gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
+//			default-state = "off";
+//		};
 
 
 	};
+
+	dim_led {
+		compatible = "pwm-backlight";
+		pwms = <&ecap0 0 30518 0>;
+		brightness-levels = <0 51 53 56 62 75 128 152 255>;
+		default-brightness-level = <6>;
+	};
+
 
 	gpio-keys {
 		pinctrl-names = "default";
@@ -108,9 +117,16 @@
 		pinctrl-single,pins = <
 			0x38 ( PIN_OUTPUT | MUX_MODE7 ) /* (V13) gpmc_ad14.gpio1[14] */ /* LED_A */
 			0x3c ( PIN_OUTPUT | MUX_MODE7 ) /* (U13) gpmc_ad15.gpio1[15] */ /* LED_B */
-			0x164 ( PIN_OUTPUT | MUX_MODE7 ) /* (C18) eCAP0_in_PWM0_out.gpio0[7] */ /* PWM */
+//			0x164 ( PIN_OUTPUT | MUX_MODE7 ) /* (C18) eCAP0_in_PWM0_out.gpio0[7] */ /* PWM */
 		>;
 	};
+
+	ecap0_pins: backlight_pins {
+		pinctrl-single,pins = <
+			0x164 ( PIN_OUTPUT | MUX_MODE0 ) /* eCAP0_in_PWM0_out.eCAP0_in_PWM0_out MODE0 */
+		>;
+	};
+
 
 	user_buttons_s0: user_buttons_s0 {
 		pinctrl-single,pins = <
@@ -191,9 +207,9 @@
 	bt_uart_pins: bt_uart_pins {
 		pinctrl-single,pins = <
 			0xc4 ( PIN_INPUT_PULLUP | MUX_MODE4 ) /* (U2) lcd_data9.uart5_rxd */
-			0xc0 ( PIN_OUTPUT | MUX_MODE4 ) /* (U1) lcd_data8.uart5_txd */
-			0xd8 ( PIN_INPUT_PULLUP | MUX_MODE6 ) /* (V4) lcd_data14.uart5_ctsn */
-			0xdc ( PIN_OUTPUT | MUX_MODE6 ) /* (T5) lcd_data15.uart5_rtsn */
+			0xc0 ( PIN_OUTPUT_PULLDOWN | MUX_MODE4 ) /* (U1) lcd_data8.uart5_txd */
+			0xd8 ( PIN_INPUT_PULLDOWN | MUX_MODE6 ) /* (V4) lcd_data14.uart5_ctsn */
+			0xdc ( PIN_OUTPUT_PULLDOWN | MUX_MODE6 ) /* (T5) lcd_data15.uart5_rtsn */
 		>;
 	};
 
@@ -519,4 +535,14 @@
 	ti,gpio-always-on;
 	ti,no-reset-on-init;
 	ti,no-idle-on-init;
+};
+
+&epwmss0 {
+	status = "okay";
+
+	ecap0: ecap@48300100 {
+		status = "okay";
+		pinctrl-names = "default";
+		pinctrl-0 = <&ecap0_pins>;
+	};
 };
