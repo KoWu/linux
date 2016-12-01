@@ -36,24 +36,7 @@
 			gpios = <&gpio1 15 GPIO_ACTIVE_HIGH>;
 			default-state = "off";
 		};
-
-// Use it as PWM for some tests
-//		led@3 {
-//			label = "nb:green:ledc";
-//			gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
-//			default-state = "off";
-//		};
-
-
 	};
-
-	dim_led {
-		compatible = "pwm-backlight";
-		pwms = <&ecap0 0 30518 0>;
-		brightness-levels = <0 51 53 56 62 75 128 152 255>;
-		default-brightness-level = <6>;
-	};
-
 
 	gpio-keys {
 		pinctrl-names = "default";
@@ -68,16 +51,35 @@
 		};
 	};
 
+	wlan_clock: pwm_clock@0 {
+		compatible = "pwm-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+		clock-output-names = "wlan_clock";
+		pwms = <&ecap0 0 30518 0>;
+	};
+
 	wlan_fixed: fixedregulator@0 {
 		compatible = "regulator-fixed";
 		regulator-name = "wlan_fixed";
 		regulator-min-microvolt = <1800000>;
 		regulator-max-microvolt = <1800000>;
 
-		gpio = <&gpio3 10 GPIO_ACTIVE_HIGH>;
-
 		startup-delay-us = <70000>;
-		enable-active-high;
+	};
+
+	sdhci1_pwrseq: sdhci1_pwrseq {
+		status = "okay";
+		compatible = "mmc-pwrseq-simple";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&wl18xx_gpio_pin>;
+		// We need to set WL_EN 0 during clock enable,
+		// so that we have clock on rising edge
+		reset-gpios = <&gpio3 10 GPIO_ACTIVE_LOW>;
+
+		clocks = <&wlan_clock>;
+		clock-names = "ext_clock";
 	};
 
 	vmmcsd_fixed: fixedregulator@1 {
@@ -106,6 +108,16 @@
 		sound_master: simple-audio-card,codec {
 			sound-dai = <&gsm_codec>;
 		};
+	};
+};
+
+&epwmss0 {
+	status = "okay";
+
+	ecap0: ecap@48300100 {
+		status = "okay";
+		pinctrl-names = "default";
+		pinctrl-0 = <&ecap0_pins>;
 	};
 };
 
@@ -224,6 +236,11 @@
 
 			0x118 ( PIN_OUTPUT_PULLDOWN | MUX_MODE7 ) /* (J17) gmii1_rxdv.gpio3[4] */ /* BT_EN */
 			0x12c ( PIN_INPUT| MUX_MODE7 ) /* (K18) gmii1_txclk.gpio3[9] */ /* WLAN_IRQ */
+		>;
+	};
+
+	wl18xx_gpio_pin: wl18xx_gpio_pin {
+		pinctrl-single,pins = <
 			0x130 ( PIN_OUTPUT_PULLDOWN | MUX_MODE7 ) /* (L18) gmii1_rxclk.gpio3[10] */ /* WLAN_EN */
 		>;
 	};
@@ -425,7 +442,7 @@
 
 	status = "okay";
 
-	op-mode = <1>;          /* S/PDIF */
+	op-mode = <1>;		  /* S/PDIF */
 	tdm-slots = <1>;
 	/* 4 serializers */
 	serial-dir = <  /* 0: INACTIVE, 1: TX, 2: RX */
@@ -467,15 +484,16 @@
 };
 
 &mmc1 {
-	vmmc-supply = <&wlan_fixed>;
+	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdio_wlan_pins>;
 	bus-width = <0x4>;
-	status = "okay";
 	ti,non-removable;
 	ti,needs-special-hs-handling;
 	cap-power-off-card;
 	keep-power-in-suspend;
+	vmmc-supply = <&wlan_fixed>;
+	mmc-pwrseq = <&sdhci1_pwrseq>;
 
 	#address-cells = <1>;
 	#size-cells = <0>;
@@ -537,12 +555,3 @@
 	ti,no-idle-on-init;
 };
 
-&epwmss0 {
-	status = "okay";
-
-	ecap0: ecap@48300100 {
-		status = "okay";
-		pinctrl-names = "default";
-		pinctrl-0 = <&ecap0_pins>;
-	};
-};
