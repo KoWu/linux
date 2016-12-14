@@ -44,8 +44,8 @@
 
 		compatible = "gpio-keys";
 
-		reset-button {
-			label = "Reset button";
+		reset_button: reset-button {
+				label = "Reset button";
 				gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
 				linux,code = <0x198>; /* KEY_RESTART */
 		};
