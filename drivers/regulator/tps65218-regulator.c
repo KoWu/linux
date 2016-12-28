@@ -84,7 +84,7 @@ static struct tps_info tps65218_pmic_regs[] = {
 	TPS65218_INFO(DCDC5, "DCDC5", 1000000, 1000000),
 	TPS65218_INFO(DCDC6, "DCDC6", 1800000, 1800000),
 	TPS65218_INFO(LDO1, "LDO1", 900000, 3400000),
-	TPS65218_INFO(LS3, "LS2", -1, -1),
+	TPS65218_INFO(LS2, "LS2", -1, -1),
 	TPS65218_INFO(LS3, "LS3", -1, -1),
 };
 
@@ -229,7 +229,7 @@ static struct regulator_ops tps65218_ldo1_dcdc34_ops = {
 	.set_suspend_disable	= tps65218_pmic_set_suspend_disable,
 };
 
-static const int ls3_currents[] = { 100, 200, 500, 1000 };
+static const int ls3_currents[] = { 100000, 200000, 500000, 1000000 };
 
 static int tps65218_pmic_set_input_current_lim(struct regulator_dev *dev,
 					       int lim_uA)
