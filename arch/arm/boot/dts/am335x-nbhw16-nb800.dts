@@ -18,22 +18,96 @@
 		compatible = "netmodule,system-info";
 		hardware-base = <16>;
 	};
+
+	wlan_clock: pwm_clock@0 {
+		compatible = "pwm-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+		clock-output-names = "wlan_clock";
+		pwms = <&ecap2 0 30518 0>;
+	};
+
+	sdhci1_pwrseq: sdhci1_pwrseq {
+		status = "okay";
+		compatible = "mmc-pwrseq-simple";
+
+		// We need to set WL_EN 0 during clock enable,
+		// so that we have clock on rising edge
+		reset-gpios = <&gpio3 10 GPIO_ACTIVE_LOW>;
+
+		clocks = <&wlan_clock>;
+		clock-names = "ext_clock";
+	};
+
 };
 
-&mac {
-	dual_emac = <1>;
+&reset_button {
+	gpios = <&gpio0 2 GPIO_ACTIVE_LOW>;
+};
+
+&epwmss2 {
+	status = "okay";
+
+	ecap2: ecap@48304100 {
+		status = "okay";
+		pinctrl-names = "default";
+		pinctrl-0 = <&ecap2_pins>;
+	};
+
+};
+
+
+&mmc1 {
+	mmc-pwrseq = <&sdhci1_pwrseq>;
 };
 
 &cpsw_emac0 {
-	dual_emac_res_vlan = <1>;
+	dual_emac_res_vlan = <0>;
 };
 
+// V2 only has one mac
 &cpsw_emac1 {
-	dual_emac_res_vlan = <2>;
+	status = "disabled";
 };
 
-&wlan_fixed {
-	gpio = <&gpio3 10 0>;
+&tps65218 {
+	ls2: regulator-ls2 {
+ 			compatible = "ti,tps65218-ls2";
+			regulator-name = "vdd_usb";
+			regulator-min-microamp = <500000>;
+			regulator-max-microamp = <1000000>;
+			regulator-boot-on;
+			regulator-always-on;
+	};
+};
+
+&dcdc2 {
+	status = "disabled";
+};
+
+&usb0_phy {
+	pinctrl-names = "default";
+	pinctrl-0 =  <&usb_host_pins>;
+	status = "okay";
+	vcc-supply = <&ls2>;
+};
+
+&usb1_phy {
+	pinctrl-names = "default";
+	pinctrl-0 =  <&usb_gsm_pins>;
+	status = "okay";
+};
+
+
+&usb0 {
+	status = "okay";
+};
+
+&uart1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart1_pins>;
+
+	status = "okay";
 };
 
 &am33xx_pinmux {
@@ -44,7 +118,6 @@
 		pinctrl-single,pins = <
 			0x38 ( PIN_OUTPUT | MUX_MODE7 ) /* (V13) gpmc_ad14.gpio1[14] */ /* LED_A */
 			0x3c ( PIN_OUTPUT | MUX_MODE7 ) /* (U13) gpmc_ad15.gpio1[15] */ /* LED_B */
-//			0x164 ( PIN_OUTPUT | MUX_MODE7 ) /* (C18) eCAP0_in_PWM0_out.gpio0[7] */ /* PWM */
 		>;
 	};
 
@@ -54,10 +127,21 @@
 		>;
 	};
 
+	usb_host_pins: usb_host_pins {
+		pinctrl-single,pins = <
+			0x21c ( PIN_INPUT_PULLDOWN | MUX_MODE0 ) /* (F16) USB0_DRVVBUS.USB0_DRVVBUS */
+		>;
+	};
+
+	ecap2_pins: pwm_pins {
+		pinctrl-single,pins = <
+			0x19c ( PIN_OUTPUT | MUX_MODE4 ) /* MCASP0_AHCLKR.eCAP2_in_PWM2_out MODE4 */
+		>;
+	};
 
 	user_buttons_s0: user_buttons_s0 {
 		pinctrl-single,pins = <
-			0x34 ( PIN_INPUT_PULLUP | MUX_MODE7 ) /* (R12) gpmc_ad13.gpio1[13] */ /* BUTTON */
+			0x44 ( PIN_INPUT_PULLUP | MUX_MODE7 ) /* (A17) gpmc_a1.gpio0[2] */ /* BUTTON */
 		>;
 	};
 
@@ -72,6 +156,8 @@
 		pinctrl-single,pins = <
 			0x170 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (E15) uart0_rxd.uart0_rxd */
 			0x174 ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (E16) uart0_txd.uart0_txd */
+			0x168 ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (E18) uart0_ctsn.uart0_ctsn */
+			0x16C ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (E17) uart0_rtsn.uart0_rtsn */
 		>;
 	};
 
@@ -79,8 +165,6 @@
 		pinctrl-single,pins = <
 			0x180 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (D16) uart1_rxd.uart1_rxd */
 			0x184 ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (D15) uart1_txd.uart1_txd */
-			0x178 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (D18) uart1_ctsn.uart1_ctsn */
-			0x17c ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (D17) uart1_rtsn.uart1_rtsn */
 		>;
 	};
 
@@ -102,16 +186,6 @@
 			0x13c ( PIN_INPUT_PULLDOWN | MUX_MODE1 ) /* (L15) gmii1_rxd1.rmii1_rxd1 */
 			0x140 ( PIN_INPUT_PULLDOWN | MUX_MODE1 ) /* (M16) gmii1_rxd0.rmii1_rxd0 */
 			0x144 ( PIN_INPUT_PULLDOWN | MUX_MODE0 ) /* (H18) rmii1_refclk.rmii1_refclk */
-
-			/* Slave 2 */
-			0x40 ( PIN_OUTPUT_PULLDOWN | MUX_MODE3 ) /* (R13) gpmc_a0.rmii2_txen */
-			0x50 ( PIN_OUTPUT_PULLDOWN | MUX_MODE3 ) /* (R14) gpmc_a4.rmii2_txd1 */
-			0x54 ( PIN_OUTPUT_PULLDOWN | MUX_MODE3 ) /* (V15) gpmc_a5.rmii2_txd0 */
-			0x64 ( PIN_INPUT_PULLDOWN | MUX_MODE3 ) /* (U16) gpmc_a9.rmii2_crs_dv */
-			0x68 ( PIN_INPUT_PULLDOWN | MUX_MODE3 ) /* (T16) gpmc_a10.rmii2_rxd1 */
-			0x6c ( PIN_INPUT_PULLDOWN | MUX_MODE3 ) /* (V17) gpmc_a11.rmii2_rxd0 */
-			0x74 ( PIN_INPUT_PULLDOWN | MUX_MODE3 ) /* (U17) gpmc_wpn.rmii2_rxer */
-			0x108 ( PIN_INPUT_PULLDOWN | MUX_MODE1 ) /* (H16) gmii1_col.rmii2_refclk */
 			>;
 	};
 
@@ -151,7 +225,7 @@
 
 			0x118 ( PIN_OUTPUT_PULLDOWN | MUX_MODE7 ) /* (J17) gmii1_rxdv.gpio3[4] */ /* BT_EN */
 			0x12c ( PIN_INPUT| MUX_MODE7 ) /* (K18) gmii1_txclk.gpio3[9] */ /* WLAN_IRQ */
-			0x130 ( PIN_OUTPUT_PULLDOWN | MUX_MODE7 ) /* (L18) gmii1_rxclk.gpio3[10] */ /* WLAN_EN */
+			0x130 ( PIN_OUTPUT_PULLUP | MUX_MODE7 ) /* (L18) gmii1_rxclk.gpio3[10] */ /* WLAN_EN */
 		>;
 	};
 

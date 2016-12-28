@@ -51,13 +51,6 @@
 		};
 	};
 
-	wlan_clock: pwm_clock@0 {
-		compatible = "pwm-clock";
-		#clock-cells = <0>;
-		clock-frequency = <32768>;
-		clock-output-names = "wlan_clock";
-		pwms = <&ecap0 0 30518 0>;
-	};
 
 	wlan_fixed: fixedregulator@0 {
 		compatible = "regulator-fixed";
@@ -65,21 +58,8 @@
 		regulator-min-microvolt = <1800000>;
 		regulator-max-microvolt = <1800000>;
 
-		startup-delay-us = <70000>;
-	};
-
-	sdhci1_pwrseq: sdhci1_pwrseq {
-		status = "okay";
-		compatible = "mmc-pwrseq-simple";
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&wl18xx_gpio_pin>;
-		// We need to set WL_EN 0 during clock enable,
-		// so that we have clock on rising edge
-		reset-gpios = <&gpio3 10 GPIO_ACTIVE_LOW>;
-
-		clocks = <&wlan_clock>;
-		clock-names = "ext_clock";
+		startup-delay-us = <700000>;
+		enable-active-high;
 	};
 
 	vmmcsd_fixed: fixedregulator@1 {
@@ -119,205 +99,6 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&ecap0_pins>;
 	};
-};
-
-&am33xx_pinmux {
-	pinctrl-names = "default";
-	pinctrl-0 = <&clkout2_pin>;
-
-	user_leds_s0: user_leds_s0 {
-		pinctrl-single,pins = <
-			0x38 ( PIN_OUTPUT | MUX_MODE7 ) /* (V13) gpmc_ad14.gpio1[14] */ /* LED_A */
-			0x3c ( PIN_OUTPUT | MUX_MODE7 ) /* (U13) gpmc_ad15.gpio1[15] */ /* LED_B */
-//			0x164 ( PIN_OUTPUT | MUX_MODE7 ) /* (C18) eCAP0_in_PWM0_out.gpio0[7] */ /* PWM */
-		>;
-	};
-
-	ecap0_pins: backlight_pins {
-		pinctrl-single,pins = <
-			0x164 ( PIN_OUTPUT | MUX_MODE0 ) /* eCAP0_in_PWM0_out.eCAP0_in_PWM0_out MODE0 */
-		>;
-	};
-
-
-	user_buttons_s0: user_buttons_s0 {
-		pinctrl-single,pins = <
-			0x34 ( PIN_INPUT_PULLUP | MUX_MODE7 ) /* (R12) gpmc_ad13.gpio1[13] */ /* BUTTON */
-		>;
-	};
-
-	i2c0_pins: pinmux_i2c0_pins {
-		pinctrl-single,pins = <
-			0x18c ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (C16) I2C0_SCL.I2C0_SCL */
-			0x188 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (C17) I2C0_SDA.I2C0_SDA */
-		>;
-	};
-
-	uart0_pins: pinmux_uart0_pins {
-		pinctrl-single,pins = <
-			0x170 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (E15) uart0_rxd.uart0_rxd */
-			0x174 ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (E16) uart0_txd.uart0_txd */
-		>;
-	};
-
-	uart1_pins: pinmux_uart1_pins {
-		pinctrl-single,pins = <
-			0x180 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (D16) uart1_rxd.uart1_rxd */
-			0x184 ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (D15) uart1_txd.uart1_txd */
-			0x178 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (D18) uart1_ctsn.uart1_ctsn */
-			0x17c ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (D17) uart1_rtsn.uart1_rtsn */
-		>;
-	};
-
-	clkout2_pin: pinmux_clkout2_pin {
-		pinctrl-single,pins = <
-			0x1b4 ( PIN_OUTPUT | MUX_MODE3 ) /* (D14) xdma_event_intr1.clkout2 */ /* CLKOUT2 */
-		>;
-	};
-
-	cpsw_default: cpsw_default {
-		pinctrl-single,pins = <
-
-			/* Slave 1 */
-			0x10c ( PIN_INPUT_PULLDOWN | MUX_MODE1 ) /* (H17) gmii1_crs.rmii1_crs_dv */
-			0x110 ( PIN_INPUT_PULLDOWN | MUX_MODE1 ) /* (J15) gmii1_rxer.rmii1_rxer */
-			0x114 ( PIN_OUTPUT_PULLDOWN | MUX_MODE1 ) /* (J16) gmii1_txen.rmii1_txen */
-			0x124 ( PIN_OUTPUT_PULLDOWN | MUX_MODE1 ) /* (K16) gmii1_txd1.rmii1_txd1 */
-			0x128 ( PIN_OUTPUT_PULLDOWN | MUX_MODE1 ) /* (K17) gmii1_txd0.rmii1_txd0 */
-			0x13c ( PIN_INPUT_PULLDOWN | MUX_MODE1 ) /* (L15) gmii1_rxd1.rmii1_rxd1 */
-			0x140 ( PIN_INPUT_PULLDOWN | MUX_MODE1 ) /* (M16) gmii1_rxd0.rmii1_rxd0 */
-			0x144 ( PIN_INPUT_PULLDOWN | MUX_MODE0 ) /* (H18) rmii1_refclk.rmii1_refclk */
-
-			/* Slave 2 */
-			0x40 ( PIN_OUTPUT_PULLDOWN | MUX_MODE3 ) /* (R13) gpmc_a0.rmii2_txen */
-			0x50 ( PIN_OUTPUT_PULLDOWN | MUX_MODE3 ) /* (R14) gpmc_a4.rmii2_txd1 */
-			0x54 ( PIN_OUTPUT_PULLDOWN | MUX_MODE3 ) /* (V15) gpmc_a5.rmii2_txd0 */
-			0x64 ( PIN_INPUT_PULLDOWN | MUX_MODE3 ) /* (U16) gpmc_a9.rmii2_crs_dv */
-			0x68 ( PIN_INPUT_PULLDOWN | MUX_MODE3 ) /* (T16) gpmc_a10.rmii2_rxd1 */
-			0x6c ( PIN_INPUT_PULLDOWN | MUX_MODE3 ) /* (V17) gpmc_a11.rmii2_rxd0 */
-			0x74 ( PIN_INPUT_PULLDOWN | MUX_MODE3 ) /* (U17) gpmc_wpn.rmii2_rxer */
-			0x108 ( PIN_INPUT_PULLDOWN | MUX_MODE1 ) /* (H16) gmii1_col.rmii2_refclk */
-			>;
-	};
-
-	davinci_mdio_default: davinci_mdio_default {
-		pinctrl-single,pins = <
-			/* MDIO */
-			0x148 ( PIN_INPUT_PULLUP | SLEWCTRL_FAST | MUX_MODE0 ) /* (M17) mdio_data.mdio_data */
-			0x14c ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (M18) mdio_clk.mdio_clk */
-		>;
-	};
-
-	davinci_mdio_sleep: davinci_mdio_sleep {
-		pinctrl-single,pins = <
-			/* MDIO reset value */
-			0x148 (PIN_INPUT_PULLDOWN | MUX_MODE7)
-			0x14c (PIN_INPUT_PULLDOWN | MUX_MODE7)
-		>;
-	};
-
-	bt_uart_pins: bt_uart_pins {
-		pinctrl-single,pins = <
-			0xc4 ( PIN_INPUT_PULLUP | MUX_MODE4 ) /* (U2) lcd_data9.uart5_rxd */
-			0xc0 ( PIN_OUTPUT_PULLDOWN | MUX_MODE4 ) /* (U1) lcd_data8.uart5_txd */
-			0xd8 ( PIN_INPUT_PULLDOWN | MUX_MODE6 ) /* (V4) lcd_data14.uart5_ctsn */
-			0xdc ( PIN_OUTPUT_PULLDOWN | MUX_MODE6 ) /* (T5) lcd_data15.uart5_rtsn */
-		>;
-	};
-
-	sdio_wlan_pins: sdio_wlan_pins {
-		pinctrl-single,pins = <
-			0x100 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (G17) mmc0_clk.mmc0_clk */
-			0x104 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (G18) mmc0_cmd.mmc0_cmd */
-			0xfc ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (G16) mmc0_dat0.mmc0_dat0 */
-			0xf8 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (G15) mmc0_dat1.mmc0_dat1 */
-			0xf4 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (F18) mmc0_dat2.mmc0_dat2 */
-			0xf0 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (F17) mmc0_dat3.mmc0_dat3 */
-
-			0x118 ( PIN_OUTPUT_PULLDOWN | MUX_MODE7 ) /* (J17) gmii1_rxdv.gpio3[4] */ /* BT_EN */
-			0x12c ( PIN_INPUT| MUX_MODE7 ) /* (K18) gmii1_txclk.gpio3[9] */ /* WLAN_IRQ */
-		>;
-	};
-
-	wl18xx_gpio_pin: wl18xx_gpio_pin {
-		pinctrl-single,pins = <
-			0x130 ( PIN_OUTPUT_PULLDOWN | MUX_MODE7 ) /* (L18) gmii1_rxclk.gpio3[10] */ /* WLAN_EN */
-		>;
-	};
-
-	emmc_pins: pinmux_emmc_pins {
-		pinctrl-single,pins = <
-			0x80 ( PIN_INPUT_PULLUP | MUX_MODE2 ) /* (U9) gpmc_csn1.mmc1_clk */
-			0x84 ( PIN_INPUT_PULLUP | MUX_MODE2 ) /* (V9) gpmc_csn2.mmc1_cmd */
-			0x0 ( PIN_INPUT_PULLUP | MUX_MODE1 ) /* (U7) gpmc_ad0.mmc1_dat0 */
-			0x4 ( PIN_INPUT_PULLUP | MUX_MODE1 ) /* (V7) gpmc_ad1.mmc1_dat1 */
-			0x8 ( PIN_INPUT_PULLUP | MUX_MODE1 ) /* (R8) gpmc_ad2.mmc1_dat2 */
-			0xc ( PIN_INPUT_PULLUP | MUX_MODE1 ) /* (T8) gpmc_ad3.mmc1_dat3 */
-			0x10 ( PIN_INPUT_PULLUP | MUX_MODE1 ) /* (U8) gpmc_ad4.mmc1_dat4 */
-			0x14 ( PIN_INPUT_PULLUP | MUX_MODE1 ) /* (V8) gpmc_ad5.mmc1_dat5 */
-			0x18 ( PIN_INPUT_PULLUP | MUX_MODE1 ) /* (R9) gpmc_ad6.mmc1_dat6 */
-			0x1c ( PIN_INPUT_PULLUP | MUX_MODE1 ) /* (T9) gpmc_ad7.mmc1_dat7 */
-		>;
-	};
-
-	pcm_pins: pcm_pins {
-		pinctrl-single,pins = <
-			0x190 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (A13) mcasp0_aclkx.mcasp0_aclkx */
-			0x194 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (B13) mcasp0_fsx.mcasp0_fsx */
-			0x1a0 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (B12) mcasp0_aclkr.mcasp0_aclkr */
-			0x1a4 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (C13) mcasp0_fsr.mcasp0_fsr */
-			0x198 ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (D12) mcasp0_axr0.mcasp0_axr0 */
-			0x1a8 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (D13) mcasp0_axr1.mcasp0_axr1 */
-		>;
-	};
-
-	can_pins: can_pins {
-		pinctrl-single,pins = <
-			0x16c ( PIN_INPUT_PULLUP | MUX_MODE2 ) /* (E17) uart0_rtsn.dcan1_rx */
-			0x168 ( PIN_OUTPUT_PULLUP | MUX_MODE2 ) /* (E18) uart0_ctsn.dcan1_tx */
-		>;
-	};
-
-	usb_expansion_pins: usb_expansion_pins {
-		pinctrl-single,pins = <
-			0x21c ( PIN_INPUT_PULLDOWN | MUX_MODE0 ) /* (F16) USB0_DRVVBUS.USB0_DRVVBUS */
-		>;
-	};
-
-	usb_gsm_pins: usb_gsm_pins {
-		pinctrl-single,pins = <
-			0x234 ( PIN_INPUT_PULLDOWN | MUX_MODE0 ) /* (F15) USB1_DRVVBUS.USB1_DRVVBUS */
-		>;
-	};
-
-	user_spi_pins: user_spi_pins {
-		pinctrl-single,pins = <
-			0x150 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (A17) spi0_sclk.spi0_sclk */
-			0x154 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (B17) spi0_d0.spi0_d0 */
-			0x158 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (B16) spi0_d1.spi0_d1 */
-			0x15c ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (A16) spi0_cs0.spi0_cs0 */
-		>;
-	};
-
-	myglue1_pins: myglue1_pins {
-		pinctrl-single,pins = <
-			0x1c0 ( PIN_INPUT | MUX_MODE0 ) /* (B18) nNMI.nNMI */ /* EXT_INT~*/
-			0x1b0 ( PIN_OUTPUT | MUX_MODE3 ) /* (A15) xdma_event_intr0.clkout1 */ /* CLKOUT1 */
-		>;
-	};
-
-	mydebugss1_pins: mydebugss1_pins {
-		pinctrl-single,pins = <
-			0x1d0 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (C11) TMS.TMS */
-			0x1d4 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (B11) TDI.TDI */
-			0x1d8 ( PIN_OUTPUT | MUX_MODE0 ) /* (A11) TDO.TDO */
-			0x1dc ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (A12) TCK.TCK */
-			0x1e0 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (B10) nTRST.nTRST */
-			0x1e4 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (C14) EMU0.EMU0 */
-			0x1e8 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (B14) EMU1.EMU1 */
-		>;
-	};
-
 };
 
 &uart0 {
@@ -455,13 +236,11 @@
 &cpsw_emac0 {
 	phy_id = <&davinci_mdio>, <0>;
 	phy-mode = "rmii";
-	dual_emac_res_vlan = <1>;
 };
 
 &cpsw_emac1 {
 	phy_id = <&davinci_mdio>, <1>;
 	phy-mode = "rmii";
-	dual_emac_res_vlan = <2>;
 };
 
 &phy_sel {
@@ -471,7 +250,6 @@
 &mac {
 	pinctrl-names = "default";
 	pinctrl-0 = <&cpsw_default>;
-	dual_emac = <1>;
 	status = "okay";
 };
 
@@ -488,16 +266,15 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdio_wlan_pins>;
 	bus-width = <0x4>;
-	ti,non-removable;
-	ti,needs-special-hs-handling;
-	cap-power-off-card;
-	keep-power-in-suspend;
 	vmmc-supply = <&wlan_fixed>;
-	mmc-pwrseq = <&sdhci1_pwrseq>;
+	non-removable;
+	ti,non-removable;
+	keep-power-in-suspend;
 
 	#address-cells = <1>;
 	#size-cells = <0>;
 	wlcore: wlcore@2 {
+		status = "okay";
 		compatible = "ti,wl1835";
 		reg = <2>;
 		interrupt-parent = <&gpio3>;
