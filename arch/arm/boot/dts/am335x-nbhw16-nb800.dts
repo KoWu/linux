@@ -137,8 +137,8 @@
 
 	i2c0_pins: pinmux_i2c0_pins {
 		pinctrl-single,pins = <
-			0x18c ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (C16) I2C0_SCL.I2C0_SCL */
-			0x188 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (C17) I2C0_SDA.I2C0_SDA */
+			0x18c ( PIN_INPUT_PULLUP | SLEWCTRL_SLOW | MUX_MODE0 ) /* (C16) I2C0_SCL.I2C0_SCL */
+			0x188 ( PIN_INPUT_PULLUP | SLEWCTRL_SLOW | MUX_MODE0 ) /* (C17) I2C0_SDA.I2C0_SDA */
 		>;
 	};
 
@@ -153,8 +153,8 @@
 
 	uart1_pins: pinmux_uart1_pins {
 		pinctrl-single,pins = <
-			0x180 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (D16) uart1_rxd.uart1_rxd */
-			0x184 ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (D15) uart1_txd.uart1_txd */
+			0x180 ( PIN_INPUT_PULLUP | SLEWCTRL_SLOW | MUX_MODE0 ) /* (D16) uart1_rxd.uart1_rxd */
+			0x184 ( PIN_OUTPUT_PULLUP | SLEWCTRL_SLOW | MUX_MODE0 ) /* (D15) uart1_txd.uart1_txd */
 		>;
 	};
 
