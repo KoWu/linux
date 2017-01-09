@@ -44,7 +44,6 @@
 		pinctrl-single,pins = <
 			0x38 ( PIN_OUTPUT | MUX_MODE7 ) /* (V13) gpmc_ad14.gpio1[14] */ /* LED_A */
 			0x3c ( PIN_OUTPUT | MUX_MODE7 ) /* (U13) gpmc_ad15.gpio1[15] */ /* LED_B */
-//			0x164 ( PIN_OUTPUT | MUX_MODE7 ) /* (C18) eCAP0_in_PWM0_out.gpio0[7] */ /* PWM */
 		>;
 	};
 
