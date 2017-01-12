@@ -19,32 +19,38 @@
 		hardware-base = <16>;
 	};
 
-	wlan_clock: pwm_clock@0 {
-		compatible = "pwm-clock";
-		#clock-cells = <0>;
-		clock-frequency = <32768>;
-		clock-output-names = "wlan_clock";
-		pwms = <&ecap2 0 30518 0>;
+	pwmleds {
+		compatible = "pwm-leds";
+
+		dim_led {
+			label = "pwm::pwm0_out";
+			pwms = <&ecap0 0 1000000 0>;
+			max-brightness = <255>;
+		};
 	};
 
-	sdhci1_pwrseq: sdhci1_pwrseq {
-		status = "okay";
-		compatible = "mmc-pwrseq-simple";
+};
 
-		// We need to set WL_EN 0 during clock enable,
-		// so that we have clock on rising edge
-		reset-gpios = <&gpio3 10 GPIO_ACTIVE_LOW>;
-
-		clocks = <&wlan_clock>;
-		clock-names = "ext_clock";
-	};
-
+&wlan_fixed {
+	gpio = <&gpio3 10 0>;
 };
 
 &reset_button {
 	gpios = <&gpio0 2 GPIO_ACTIVE_LOW>;
 };
 
+// Add a pwm on ecap0 so that something can be measured during bringup
+&epwmss0 {
+	status = "okay";
+};
+
+&ecap0 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&ecap0_pins>;
+};
+
+// Don't touch the PWM, U-Boot does the configuration
 &epwmss2 {
 	status = "okay";
 
@@ -54,10 +60,6 @@
 		pinctrl-0 = <&ecap2_pins>;
 	};
 
-};
-
-&mmc1 {
-	mmc-pwrseq = <&sdhci1_pwrseq>;
 };
 
 &cpsw_emac0 {
