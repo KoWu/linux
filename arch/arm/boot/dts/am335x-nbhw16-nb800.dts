@@ -102,6 +102,13 @@
 	compatible = "ti,wl1837";
 };
 
+&i2c0 {
+	lm75: lm75@49 {
+		compatible = "national,lm75";
+		reg = <0x48>;
+	};
+};
+
 &am33xx_pinmux {
 	pinctrl-names = "default";
 	pinctrl-0 = <&clkout2_pin>;
