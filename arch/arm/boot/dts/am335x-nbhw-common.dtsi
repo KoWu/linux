@@ -221,7 +221,7 @@
 	pinctrl-0 = <&pcm_pins>;
 	pinctrl-1 = <&pcm_pins>;
 
-	status = "okay";
+	status = "disabled";
 
 	op-mode = <1>;		  /* S/PDIF */
 	tdm-slots = <1>;
