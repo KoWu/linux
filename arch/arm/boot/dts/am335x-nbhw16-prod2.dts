@@ -11,7 +11,7 @@
 #include "am335x-nbhw-common.dtsi"
 
 / {
-	model = "NetModule NBHW16 Prod 2";
+	model = "NetModule NBHW16 - NB800-LWWt";
 	compatible = "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
 
 	netmodule-system-info {
@@ -88,7 +88,7 @@
 };
 
 &usb0 {
-	status = "okay";
+	status = "disabled";
 };
 
 &uart1 {
