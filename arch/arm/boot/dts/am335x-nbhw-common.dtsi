@@ -34,7 +34,7 @@
 		led@2 {
 			label = "nb:green:ledb";
 			gpios = <&gpio1 15 GPIO_ACTIVE_HIGH>;
-			default-state = "off";
+			default-state = "on";
 		};
 	};
 
