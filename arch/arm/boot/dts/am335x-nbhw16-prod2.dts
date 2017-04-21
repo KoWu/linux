@@ -24,7 +24,7 @@
 
 		dim_led {
 			label = "pwm::pwm0_out";
-			pwms = <&ecap0 0 1000000 0>;
+			pwms = <&ecap0 0 100000 0>;
 			max-brightness = <255>;
 		};
 	};
