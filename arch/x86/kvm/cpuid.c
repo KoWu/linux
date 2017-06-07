@@ -509,6 +509,7 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
 			do_cpuid_1_ent(&entry[i], function, idx);
 			if (idx == 1) {
 				entry[i].eax &= kvm_supported_word10_x86_features;
+				cpuid_mask(&entry[i].eax, 10);
 				entry[i].ebx = 0;
 				if (entry[i].eax & (F(XSAVES)|F(XSAVEC)))
 					entry[i].ebx =
@@ -816,12 +817,6 @@ void kvm_cpuid(struct kvm_vcpu *vcpu, u32 *eax, u32 *ebx, u32 *ecx, u32 *edx)
 
 	if (!best)
 		best = check_cpuid_limit(vcpu, function, index);
-
-	/*
-	 * Perfmon not yet supported for L2 guest.
-	 */
-	if (is_guest_mode(vcpu) && function == 0xa)
-		best = NULL;
 
 	if (best) {
 		*eax = best->eax;
