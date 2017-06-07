@@ -9,7 +9,17 @@
 
 / {
 	model = "NetModule NBHW16 - NB800-LWWtSu";
-
+	cpus {
+		cpu@0 {
+			cpu0-supply = <&dcdc1>;
+			operating-points = <
+				/* kHz    uV */
+				600000  1100000
+				500000  1100000
+				275000  1100000
+			>;
+		};
+	};
 };
 
 &usb0_phy {
@@ -20,6 +30,10 @@
 	status = "okay";
 };
 
-&wkup_m3 {
-	ti,pm-firmware = "am335x-pm-firmware.elf";
+&cpsw_emac0 {
+    status = "disabled";
+};
+
+&mac {
+    status = "disabled";
 };
