@@ -27,8 +27,6 @@
 #include <linux/pwm.h>
 #include <linux/of_device.h>
 
-#include "pwm-tipwmss.h"
-
 /* ECAP registers and bits definitions */
 #define CAP1			0x08
 #define CAP2			0x0C
@@ -195,6 +193,7 @@ static const struct pwm_ops ecap_pwm_ops = {
 };
 
 static const struct of_device_id ecap_of_match[] = {
+	{ .compatible	= "ti,am3352-ecap" },
 	{ .compatible	= "ti,am33xx-ecap" },
 	{},
 };
@@ -202,17 +201,24 @@ MODULE_DEVICE_TABLE(of, ecap_of_match);
 
 static int ecap_pwm_probe(struct platform_device *pdev)
 {
+	struct device_node *np = pdev->dev.of_node;
 	int ret;
 	struct resource *r;
 	struct clk *clk;
 	struct ecap_pwm_chip *pc;
-	u16 status;
 
 	pc = devm_kzalloc(&pdev->dev, sizeof(*pc), GFP_KERNEL);
 	if (!pc)
 		return -ENOMEM;
 
 	clk = devm_clk_get(&pdev->dev, "fck");
+	if (IS_ERR(clk)) {
+		if (of_device_is_compatible(np, "ti,am33xx-ecap")) {
+			dev_warn(&pdev->dev, "Binding is obsolete.\n");
+			clk = devm_clk_get(pdev->dev.parent, "fck");
+		}
+	}
+
 	if (IS_ERR(clk)) {
 		dev_err(&pdev->dev, "failed to get clock\n");
 		return PTR_ERR(clk);
@@ -243,52 +249,25 @@ static int ecap_pwm_probe(struct platform_device *pdev)
 	}
 
 	pm_runtime_enable(&pdev->dev);
-	pm_runtime_get_sync(&pdev->dev);
-
-	status = pwmss_submodule_state_change(pdev->dev.parent,
-			PWMSS_ECAPCLK_EN);
-	if (!(status & PWMSS_ECAPCLK_EN_ACK)) {
-		dev_err(&pdev->dev, "PWMSS config space clock enable failed\n");
-		ret = -EINVAL;
-		goto pwmss_clk_failure;
-	}
-
-	pm_runtime_put_sync(&pdev->dev);
 
 	platform_set_drvdata(pdev, pc);
 	return 0;
-
-pwmss_clk_failure:
-	pm_runtime_put_sync(&pdev->dev);
-	pm_runtime_disable(&pdev->dev);
-	pwmchip_remove(&pc->chip);
-	return ret;
 }
 
 static int ecap_pwm_remove(struct platform_device *pdev)
 {
 	struct ecap_pwm_chip *pc = platform_get_drvdata(pdev);
 
-	pm_runtime_get_sync(&pdev->dev);
-	/*
-	 * Due to hardware misbehaviour, acknowledge of the stop_req
-	 * is missing. Hence checking of the status bit skipped.
-	 */
-	pwmss_submodule_state_change(pdev->dev.parent, PWMSS_ECAPCLK_STOP_REQ);
-	pm_runtime_put_sync(&pdev->dev);
-
 	pm_runtime_disable(&pdev->dev);
 	return pwmchip_remove(&pc->chip);
 }
 
-#ifdef CONFIG_PM_SLEEP
+#ifdef CONFIG_PM
 static void ecap_pwm_save_context(struct ecap_pwm_chip *pc)
 {
-	pm_runtime_get_sync(pc->chip.dev);
 	pc->ctx.ecctl2 = readw(pc->mmio_base + ECCTL2);
 	pc->ctx.cap4 = readl(pc->mmio_base + CAP4);
 	pc->ctx.cap3 = readl(pc->mmio_base + CAP3);
-	pm_runtime_put_sync(pc->chip.dev);
 }
 
 static void ecap_pwm_restore_context(struct ecap_pwm_chip *pc)
@@ -298,16 +277,37 @@ static void ecap_pwm_restore_context(struct ecap_pwm_chip *pc)
 	writew(pc->ctx.ecctl2, pc->mmio_base + ECCTL2);
 }
 
+static int ecap_pwm_runtime_suspend(struct device *dev)
+{
+	struct ecap_pwm_chip *pc = dev_get_drvdata(dev);
+
+	ecap_pwm_save_context(pc);
+
+	return 0;
+}
+
+static int ecap_pwm_runtime_resume(struct device *dev)
+{
+	struct ecap_pwm_chip *pc = dev_get_drvdata(dev);
+
+	ecap_pwm_restore_context(pc);
+
+	return 0;
+}
+#endif /* CONFIG_PM */
+
+#ifdef CONFIG_PM_SLEEP
 static int ecap_pwm_suspend(struct device *dev)
 {
 	struct ecap_pwm_chip *pc = dev_get_drvdata(dev);
 	struct pwm_device *pwm = pc->chip.pwms;
 
-	ecap_pwm_save_context(pc);
-
 	/* Disable explicitly if PWM is running */
 	if (pwm_is_enabled(pwm))
 		pm_runtime_put_sync(dev);
+
+	/* Select sleep pin state */
+	pinctrl_pm_select_sleep_state(dev);
 
 	return 0;
 }
@@ -317,16 +317,22 @@ static int ecap_pwm_resume(struct device *dev)
 	struct ecap_pwm_chip *pc = dev_get_drvdata(dev);
 	struct pwm_device *pwm = pc->chip.pwms;
 
+	/* Select default pin state */
+	pinctrl_pm_select_default_state(dev);
+
 	/* Enable explicitly if PWM was running */
 	if (pwm_is_enabled(pwm))
 		pm_runtime_get_sync(dev);
 
-	ecap_pwm_restore_context(pc);
 	return 0;
 }
-#endif
+#endif /* CONFIG_PM_SLEEP */
 
-static SIMPLE_DEV_PM_OPS(ecap_pwm_pm_ops, ecap_pwm_suspend, ecap_pwm_resume);
+static const struct dev_pm_ops ecap_pwm_pm_ops = {
+	SET_SYSTEM_SLEEP_PM_OPS(ecap_pwm_suspend, ecap_pwm_resume)
+	SET_RUNTIME_PM_OPS(ecap_pwm_runtime_suspend,
+			   ecap_pwm_runtime_resume, NULL)
+};
 
 static struct platform_driver ecap_pwm_driver = {
 	.driver = {

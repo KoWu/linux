@@ -5087,6 +5087,23 @@ void ieee80211_stop_rx_ba_session(struct ieee80211_vif *vif, u16 ba_rx_bitmap,
 				  const u8 *addr);
 
 /**
+ * ieee80211_change_rx_ba_max_subframes - callback to change
+ *	sta.max_rx_aggregation_subframes and stop existing BA sessions
+ *
+ * This capability is usefull in cases of IOP, i.e. cases where peer sta
+ * or ap doesn't respect the max subframes in a single-frame and uses the
+ * max window size instead. In these cases the driver/chip may recover by
+ * decreasing the max_rx_aggregation_subframes to use the single frame
+ * limitation.
+ *
+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+ * @addr: & to bssid mac address
+ * @max_subframes: new max_rx_aggregation_subframes for this sta
+ */
+void ieee80211_change_rx_ba_max_subframes(struct ieee80211_vif *vif,
+					  const u8 *addr,
+					  u8 max_subframes);
+/**
  * ieee80211_send_bar - send a BlockAckReq frame
  *
  * can be used to flush pending frames from the peer's aggregation reorder

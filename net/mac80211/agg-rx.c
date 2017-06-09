@@ -139,6 +139,28 @@ void ieee80211_stop_rx_ba_session(struct ieee80211_vif *vif, u16 ba_rx_bitmap,
 }
 EXPORT_SYMBOL(ieee80211_stop_rx_ba_session);
 
+void ieee80211_change_rx_ba_max_subframes(struct ieee80211_vif *vif,
+					  const u8 *addr,
+					  u8 max_subframes)
+{
+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+	struct sta_info *sta;
+
+	if (max_subframes == 0)
+		return;
+
+	rcu_read_lock();
+	sta = sta_info_get_bss(sdata, addr);
+	if (!sta) {
+		rcu_read_unlock();
+		return;
+	}
+	sta->sta.max_rx_aggregation_subframes = max_subframes;
+	ieee80211_queue_work(&sta->local->hw, &sta->ampdu_mlme.work);
+	rcu_read_unlock();
+}
+EXPORT_SYMBOL(ieee80211_change_rx_ba_max_subframes);
+
 /*
  * After accepting the AddBA Request we activated a timer,
  * resetting it after each frame that arrives from the originator.
@@ -289,16 +311,14 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
 	if (buf_size == 0)
 		buf_size = IEEE80211_MAX_AMPDU_BUF;
 
-	/* make sure the size doesn't exceed the maximum supported by the hw */
-	if (buf_size > sta->sta.max_rx_aggregation_subframes)
-		buf_size = sta->sta.max_rx_aggregation_subframes;
-	params.buf_size = buf_size;
-
-	ht_dbg(sta->sdata, "AddBA Req buf_size=%d for %pM\n",
-	       buf_size, sta->sta.addr);
-
 	/* examine state machine */
 	mutex_lock(&sta->ampdu_mlme.mtx);
+
+	/* make sure the size doesn't exceed the maximum supported by link */
+	if (buf_size > sta->sta.max_rx_aggregation_subframes)
+		buf_size = sta->sta.max_rx_aggregation_subframes;
+
+	ht_dbg(sta->sdata, "AddBA Req buf_size=%d\n", buf_size);
 
 	if (sta->ampdu_mlme.tid_rx[tid]) {
 		ht_dbg_ratelimited(sta->sdata,
@@ -311,17 +331,6 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
 						false);
 	}
 
-	/* prepare A-MPDU MLME for Rx aggregation */
-	tid_agg_rx = kzalloc(sizeof(*tid_agg_rx), GFP_KERNEL);
-	if (!tid_agg_rx)
-		goto end;
-
-	spin_lock_init(&tid_agg_rx->reorder_lock);
-
-	/* rx timer */
-	tid_agg_rx->session_timer.function = sta_rx_agg_session_timer_expired;
-	tid_agg_rx->session_timer.data = (unsigned long)&sta->timer_to_tid[tid];
-	init_timer_deferrable(&tid_agg_rx->session_timer);
 
 	/* rx reorder timer */
 	tid_agg_rx->reorder_timer.function = sta_rx_agg_reorder_timer_expired;
@@ -427,6 +436,17 @@ void ieee80211_start_rx_ba_session_offl(struct ieee80211_vif *vif,
 EXPORT_SYMBOL(ieee80211_start_rx_ba_session_offl);
 
 void ieee80211_stop_rx_ba_session_offl(struct ieee80211_vif *vif,
+				       const u8 *addr, u16 tid)
+{
+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+	struct ieee80211_local *local = sdata->local;
+	struct ieee80211_rx_agg *rx_agg;
+	struct sk_buff *skb = dev_alloc_skb(0);
+
+	if (unlikely(!skb))
+		return;
+
+	rx_agg = (struct ieee80211_rx_agg *) &skb->cb;
 				       const u8 *addr, u16 tid)
 {
 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);

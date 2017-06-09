@@ -22,6 +22,7 @@
 #include <linux/delay.h>
 #include <linux/pm_runtime.h>
 #include <linux/console.h>
+#include <linux/pinctrl/consumer.h>
 #include <linux/pm_qos.h>
 #include <linux/pm_wakeirq.h>
 #include <linux/dma-mapping.h>
@@ -737,7 +738,7 @@ static void __dma_rx_do_complete(struct uart_8250_port *p, bool error)
 
 	dma->rx_running = 0;
 	dmaengine_tx_status(dma->rxchan, dma->rx_cookie, &state);
-	dmaengine_terminate_all(dma->rxchan);
+	dmaengine_terminate_async(dma->rxchan);
 
 	count = dma->rx_size - state.residue;
 
@@ -763,6 +764,7 @@ static void omap_8250_rx_dma_flush(struct uart_8250_port *p)
 {
 	struct omap8250_priv	*priv = p->port.private_data;
 	struct uart_8250_dma	*dma = p->dma;
+	struct dma_tx_state     state;
 	unsigned long		flags;
 	int ret;
 
@@ -773,10 +775,12 @@ static void omap_8250_rx_dma_flush(struct uart_8250_port *p)
 		return;
 	}
 
-	ret = dmaengine_pause(dma->rxchan);
-	if (WARN_ON_ONCE(ret))
-		priv->rx_dma_broken = true;
-
+	ret = dmaengine_tx_status(dma->rxchan, dma->rx_cookie, &state);
+	if (ret == DMA_IN_PROGRESS) {
+		ret = dmaengine_pause(dma->rxchan);
+		if (WARN_ON_ONCE(ret))
+			priv->rx_dma_broken = true;
+	}
 	spin_unlock_irqrestore(&priv->rx_dma_lock, flags);
 
 	__dma_rx_do_complete(p, true);
@@ -1055,6 +1059,48 @@ static bool the_no_dma_filter_fn(struct dma_chan *chan, void *param)
 	return false;
 }
 
+enum {
+	UART_EDMA,
+	UART_SDMA,
+};
+
+static const char *sdma_prefix = "ti,omap";
+
+static int omap_8250_get_dma_type(struct uart_port *port)
+{
+	struct dma_chan *chan;
+	const char *tmp;
+	int ret = UART_EDMA;
+
+	if (!port->dev->of_node)
+		return ret;
+
+	chan = dma_request_slave_channel_reason(port->dev, "rx");
+	if (IS_ERR(chan)) {
+		if (PTR_ERR(chan) != -EPROBE_DEFER)
+			dev_err(port->dev,
+				"Can't verify DMA configuration (%ld)\n",
+				PTR_ERR(chan));
+		return PTR_ERR(chan);
+	}
+	BUG_ON(!chan->device || !chan->device->dev);
+
+	if (chan->device->dev->of_node)
+		ret = of_property_read_string(chan->device->dev->of_node,
+					      "compatible", &tmp);
+	else
+		dev_err(port->dev, "DMA controller has no of-node\n");
+
+	dma_release_channel(chan);
+	if (ret)
+		return ret;
+
+	dev_dbg(port->dev, "DMA controller compatible = \"%s\"\n", tmp);
+	if (!strncmp(tmp, sdma_prefix, strlen(sdma_prefix)))
+		return UART_SDMA;
+
+	return UART_EDMA;
+}
 #else
 
 static inline int omap_8250_rx_dma(struct uart_8250_port *p, unsigned int iir)
@@ -1218,9 +1264,12 @@ static int omap8250_probe(struct platform_device *pdev)
 				priv->habit |= OMAP_DMA_TX_KICK;
 			/*
 			 * pause is currently not supported atleast on omap-sdma
-			 * and edma on most earlier kernels.
+			 * whereas edma supports pause feature.
 			 */
-			priv->rx_dma_broken = true;
+			if (omap_8250_get_dma_type(&up.port) != UART_EDMA)
+				priv->rx_dma_broken = true;
+			else
+				priv->habit |= OMAP_DMA_TX_KICK;
 		}
 	}
 #endif
@@ -1277,8 +1326,18 @@ static void omap8250_complete(struct device *dev)
 static int omap8250_suspend(struct device *dev)
 {
 	struct omap8250_priv *priv = dev_get_drvdata(dev);
+	struct uart_8250_port *up = serial8250_get_port(priv->line);
 
 	serial8250_suspend_port(priv->line);
+
+	pm_runtime_get_sync(dev);
+	if (device_may_wakeup(dev))
+		serial_out(up, UART_OMAP_WER, priv->wer);
+	else
+		serial_out(up, UART_OMAP_WER, 0);
+	pm_runtime_mark_last_busy(dev);
+	pm_runtime_put_autosuspend(dev);
+
 	flush_work(&priv->qos_work);
 	return 0;
 }
@@ -1362,6 +1421,8 @@ static int omap8250_runtime_suspend(struct device *dev)
 	}
 
 	if (priv->habit & UART_ERRATA_CLOCK_DISABLE) {
+		/* Save module level wakeup register */
+		u32 wer = serial_in(up, UART_OMAP_WER);
 		int ret;
 
 		ret = omap8250_soft_reset(dev);
@@ -1370,6 +1431,8 @@ static int omap8250_runtime_suspend(struct device *dev)
 
 		/* Restore to UART mode after reset (for wakeup) */
 		omap8250_update_mdr1(up, priv);
+		/* Restore module level wakeup register */
+		serial_out(up, UART_OMAP_WER, wer);
 	}
 
 	if (up->dma && up->dma->rxchan)
@@ -1377,6 +1440,8 @@ static int omap8250_runtime_suspend(struct device *dev)
 
 	priv->latency = PM_QOS_CPU_DMA_LAT_DEFAULT_VALUE;
 	schedule_work(&priv->qos_work);
+
+	pinctrl_pm_select_sleep_state(dev);
 
 	return 0;
 }
@@ -1390,6 +1455,8 @@ static int omap8250_runtime_resume(struct device *dev)
 	/* In case runtime-pm tries this before we are setup */
 	if (!priv)
 		return 0;
+
+	pinctrl_pm_select_default_state(dev);
 
 	up = serial8250_get_port(priv->line);
 	loss_cntx = omap8250_lost_context(up);
