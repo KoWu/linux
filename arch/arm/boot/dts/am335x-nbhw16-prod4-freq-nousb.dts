@@ -13,7 +13,7 @@
 		cpu@0 {
 			cpu0-supply = <&dcdc1>;
 			operating-points = <
-				/* kHz    uV */
+				/* kHz	uV */
 				600000  1100000
 				500000  1100000
 				275000  1100000
@@ -23,15 +23,15 @@
 };
 
 &gsm_codec {
-    status = "disabled";
+	status = "disabled";
 };
 
 &sound_master {
-    status = "disabled";
+	status = "disabled";
 };
 
 &mcasp0 {
-    status = "disabled";
+	status = "disabled";
 };
 
 // &usb {
@@ -86,6 +86,6 @@
 };
 
 &ldo1 {
-    regulator-min-microvolt = <1750000>;
-    regulator-max-microvolt = <1750000>;
+	regulator-min-microvolt = <1750000>;
+	regulator-max-microvolt = <1750000>;
 };

@@ -38,7 +38,7 @@
 		};
 	};
 
-	gpio-keys {
+	gpio_keys: gpio-keys {
 		pinctrl-names = "default";
 		pinctrl-0 = <&user_buttons_s0>;
 
@@ -248,8 +248,9 @@
 };
 
 &mac {
-	pinctrl-names = "default";
+	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&cpsw_default>;
+	pinctrl-1 = <&cpsw_sleep>;
 	status = "okay";
 };
 
@@ -299,12 +300,6 @@
 &wdt2 {
 	ti,hwmod-disabled;
 	status = "disabled";
-};
-
-&timer1 {
-	ti,no-reset-on-init;
-	ti,no-idle-on-init;
-	ti,no_idle_on_suspend;
 };
 
 // We dont want to lose the gpio state that was set in u-boot

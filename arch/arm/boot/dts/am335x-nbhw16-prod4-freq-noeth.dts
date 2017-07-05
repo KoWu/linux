@@ -13,7 +13,7 @@
 		cpu@0 {
 			cpu0-supply = <&dcdc1>;
 			operating-points = <
-				/* kHz    uV */
+				/* kHz	uV */
 				600000  1100000
 				500000  1100000
 				275000  1100000
@@ -31,9 +31,9 @@
 };
 
 &cpsw_emac0 {
-    status = "disabled";
+	status = "disabled";
 };
 
 &mac {
-    status = "disabled";
+	status = "disabled";
 };

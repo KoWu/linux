@@ -17,6 +17,6 @@
 
 &wlcore {
 	compatible = "ti,wl1837";
-    status = "disabled";
+	status = "disabled";
 };
 
