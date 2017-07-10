@@ -554,6 +554,7 @@
 			reg = <0x48042000 0x400>;
 			interrupts = <69>;
 			ti,hwmods = "timer3";
+			ti,no-idle;
 		};
 
 		timer4: timer@48044000 {

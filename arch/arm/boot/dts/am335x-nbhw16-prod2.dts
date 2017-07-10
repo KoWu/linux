@@ -29,6 +29,21 @@
 		};
 	};
 
+	wakeup_timer0: wakeup_timer@0 {
+		compatible = "wakeup-timer";
+		status = "okay";
+		timer = <&timer3>;
+		interrupts = <68>;
+		interrupt-names	= "wakeup";
+		wakeup-source;
+	};
+
+};
+
+&timer3 {
+		status = "okay";
+		wakeup-source;
+		ti,no-idle;
 };
 
 &wlan_fixed {
