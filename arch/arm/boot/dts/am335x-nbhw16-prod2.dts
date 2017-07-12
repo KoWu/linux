@@ -142,6 +142,10 @@
 	status = "disabled";
 };
 
+&mac {
+	slaves = <1>;
+};
+
 &dcdc2 {
 	status = "disabled";
 };
