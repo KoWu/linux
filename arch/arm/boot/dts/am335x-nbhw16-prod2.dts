@@ -14,6 +14,13 @@
 	model = "NetModule NBHW16 - NB800-LWWt";
 	compatible = "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
 
+	cpus {
+		cpu@0 {
+			cpu0-supply = <&dcdc1>;
+			operating-points-v2 = <&cpu0_opp_table>;
+		};
+	};
+
 	netmodule-system-info {
 		compatible = "netmodule,system-info";
 		hardware-base = <16>;
@@ -37,6 +44,22 @@
 		interrupt-names	= "wakeup";
 		wakeup-source;
 	};
+
+};
+
+&cpu0_opp_table {
+	/*
+	 * All PG 2.0 silicon may not support 1GHz but some of the early
+	 * BeagleBone Blacks have PG 2.0 silicon which is guaranteed
+	 * to support 1GHz OPP so enable it for PG 2.0 on this board.
+	 */
+		opp50@300000000 {
+			opp-supported-hw = <0x00 0x0000>;
+		};
+
+		opp100@300000000 {
+			opp-supported-hw = <0x06 0x0010>;
+		};
 
 };
 
