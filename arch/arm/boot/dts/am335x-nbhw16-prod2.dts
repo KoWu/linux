@@ -27,6 +27,8 @@
 	};
 
 	pwmleds {
+		/* pwm leds for debugging */
+		status = "disabled";
 		compatible = "pwm-leds";
 
 		dim_led {
@@ -45,6 +47,11 @@
 		wakeup-source;
 	};
 
+	leds {
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&user_leds_s0>;
+		pinctrl-1 = <&user_leds_s0_sleep>;
+	};
 };
 
 &cpu0_opp_table {
@@ -90,27 +97,38 @@
 		interrupts = <14 IRQ_TYPE_LEVEL_HIGH>;
 		wakeup-source;
 	};
+
+	uart1_standby: uart1-standby {
+		status = "okay";
+		label = "UART1 standby";
+		linux,code = <103>;
+		gpios = <&gpio0 14 GPIO_ACTIVE_HIGH>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <14 IRQ_TYPE_LEVEL_HIGH>;
+		wakeup-source;
+	};
+
 };
 
 // Add a pwm on ecap0 so that something can be measured during bringup
 &epwmss0 {
-	status = "okay";
+	status = "disabled";
 };
 
 &ecap0 {
-	status = "okay";
-	pinctrl-names = "default";
+	status = "disabled";
+	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&ecap0_pins>;
+	pinctrl-1 = <&ecap0_pins_sleep>;
 };
 
 // Don't touch the PWM, U-Boot does the configuration
 &epwmss2 {
 	status = "okay";
 
+	// Leave ecap2 disabled, because if we would enable it, the clock would be reconfigured
+	// we want to leave it as under u-boot
 	ecap2: ecap@48304100 {
-		status = "okay";
-		pinctrl-names = "default";
-		pinctrl-0 = <&ecap2_pins>;
 	};
 
 };
@@ -184,6 +202,10 @@
 	pinctrl-0 = <&can1_pins>;
 };
 
+&mmc1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdio_wlan_pins>;
+};
 
 &am33xx_pinmux {
 	pinctrl-names = "default";
@@ -193,24 +215,42 @@
 		pinctrl-single,pins = <
 			0x38 ( PIN_OUTPUT | MUX_MODE7 ) /* (V13) gpmc_ad14.gpio1[14] */ /* LED_A */
 			0x3c ( PIN_OUTPUT | MUX_MODE7 ) /* (U13) gpmc_ad15.gpio1[15] */ /* LED_B */
+
+			0x19c ( PIN_OUTPUT | MUX_MODE4 ) /* MCASP0_AHCLKR.eCAP2_in_PWM2_out MODE4 this is the WIFI Clock! */
 		>;
 	};
 
+	user_leds_s0_sleep: user_leds_s0_sleep {
+		pinctrl-single,pins = <
+			0x38 ( PIN_INPUT | MUX_MODE7 ) /* (V13) gpmc_ad14.gpio1[14] */ /* LED_A */
+			0x3c ( PIN_INPUT | MUX_MODE7 ) /* (U13) gpmc_ad15.gpio1[15] */ /* LED_B */
+
+			/*
+			* MCASP0_AHCLKR.eCAP2_in_PWM2_out MODE4 this is the WIFI Clock!
+			* We need to hava an option to configure the standby muxing but we can't use the
+			* ecap2 module (see there why). So we set the muxing on the led pinctrl, which supports
+			* sleep state. This is a hack!
+			*/
+			0x19c ( PIN_INPUT| MUX_MODE7 )
+		>;
+	};
+
+
 	ecap0_pins: backlight_pins {
 		pinctrl-single,pins = <
-			0x164 ( PIN_OUTPUT | MUX_MODE0 ) /* eCAP0_in_PWM0_out.eCAP0_in_PWM0_out MODE0 */
+			0x164 ( PIN_OUTPUT | MUX_MODE0 ) /* eCAP0_in_PWM0_out.eCAP0_in_PWM0_out MODE0 is an optional pwm*/
+		>;
+	};
+
+	ecap0_pins_sleep: backlight_pins {
+		pinctrl-single,pins = <
+			0x164 ( PIN_INPUT | MUX_MODE7 ) /* eCAP0_in_PWM0_out.eCAP0_in_PWM0_out MODE0 */
 		>;
 	};
 
 	usb_host_pins: usb_host_pins {
 		pinctrl-single,pins = <
 			0x21c ( PIN_INPUT_PULLDOWN | MUX_MODE0 ) /* (F16) USB0_DRVVBUS.USB0_DRVVBUS */
-		>;
-	};
-
-	ecap2_pins: pwm_pins {
-		pinctrl-single,pins = <
-			0x19c ( PIN_OUTPUT | MUX_MODE4 ) /* MCASP0_AHCLKR.eCAP2_in_PWM2_out MODE4 */
 		>;
 	};
 
@@ -301,7 +341,7 @@
 	davinci_mdio_default: davinci_mdio_default {
 		pinctrl-single,pins = <
 			/* MDIO */
-			0x148 ( PIN_INPUT_PULLUP | SLEWCTRL_SLOW | MUX_MODE0 ) /* (M17) mdio_data.mdio_data */
+			0x148 ( PIN_INPUT | SLEWCTRL_SLOW | MUX_MODE0 ) /* (M17) mdio_data.mdio_data */
 			0x14c ( PIN_OUTPUT_PULLUP | SLEWCTRL_SLOW | MUX_MODE0 ) /* (M18) mdio_clk.mdio_clk */
 		>;
 	};
@@ -309,8 +349,8 @@
 	davinci_mdio_sleep: davinci_mdio_sleep {
 		pinctrl-single,pins = <
 			/* MDIO reset value */
-			0x148 (PIN_INPUT_PULLDOWN | MUX_MODE7)
-			0x14c (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x148 (PIN_INPUT | MUX_MODE7)
+			0x14c (PIN_INPUT | MUX_MODE7)
 		>;
 	};
 
