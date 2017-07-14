@@ -1,0 +1,74 @@
+/*
+ * Device Tree file for Marvell Armada 385 based NB3800
+ *
+ *  Copyright (C) 2017 NetModule
+ *
+ * Stefan Eichenberger <stefan.eichenberger@netmodule.com>
+ *
+ * This file is licensed under the terms of the GNU General Public
+ * License version 2.  This program is licensed "as is" without any
+ * warranty of any kind, whether express or implied.
+ */
+
+/* The name aramda-385-nbhw14.dts needs to stay the same because of legacy reasons */
+
+/dts-v1/;
+#include "armada-385-nbhw14-common.dtsi"
+
+/ {
+	model = "Marvell Armada 385 nbhw14 board with RGMII connection to PHY";
+};
+
+&mdio {
+	/* DSA on RGMII/MII uses MAC0 as corresponding MAC */
+	dsa: dsa@0 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		compatible = "marvell,mv88e6085";
+		reg = <0>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			port@5 {
+				reg = <5>;
+				label = "lan0";
+			};
+
+			port@6 {
+				reg = <6>;
+				label = "lan1";
+			};
+
+			port@7 {
+				reg = <7>;
+				label = "lan2";
+			};
+			
+			port@8 {
+				reg = <8>;
+				label = "lan3";
+			};
+
+			port@9 {
+				reg = <9>;
+				label = "lan4";
+			};
+
+			port@10 {
+				reg = <10>;
+				label = "cpu";
+				ethernet = <&eth1>;
+				fixed-link {
+					  speed = <1000>;
+					  full-duplex;
+				};
+			};
+		};
+	};
+};
+
+&eth1 {
+	status = "okay";
+};
