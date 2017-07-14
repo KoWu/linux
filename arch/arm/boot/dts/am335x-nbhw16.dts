@@ -114,6 +114,12 @@
 			>;
 	};
 
+	/* Don't support sleep on prototypes */
+	cpsw_sleep: cpsw_default {
+		pinctrl-single,pins = < >;
+	};
+
+
 	davinci_mdio_default: davinci_mdio_default {
 		pinctrl-single,pins = <
 			/* MDIO */
