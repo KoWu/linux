@@ -1,0 +1,30 @@
+/*
+ * Device Tree file for the NetModule NBHW17 (NB2800) base variant
+ *
+ *  Copyright (C) 2017 NetModule
+ *
+ * Stefan Eichenberger <stefan.eichenberger@netmodule.com>
+ *
+ * This file is licensed under the terms of the GNU General Public
+ * License version 2.  This program is licensed "as is" without any
+ * warranty of any kind, whether express or implied.
+ */
+
+/dts-v1/;
+#include "armada-385-nbhw17-common.dtsi"
+
+/ {
+	model = "NB2800 based on Marvell Armada A385 NBHW17";
+
+	soc {
+		internal-regs {
+			eth1: ethernet@30000 {
+				status = "okay";
+			};
+
+			eth2: ethernet@34000 {
+				status = "okay";
+			};
+		};
+	};
+};

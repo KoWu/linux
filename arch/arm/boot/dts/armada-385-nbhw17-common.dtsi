@@ -1,0 +1,276 @@
+/*
+ * Device Tree file for the NetModule NBHW17 (NB2800)
+ *
+ * Copyright (C) 2017 NetModule
+ *
+ * Stefan Eichenberger <stefan.eichenberger@netmodule.com>
+ *
+ * This file is licensed under the terms of the GNU General Public
+ * License version 2.  This program is licensed "as is" without any
+ * warranty of any kind, whether express or implied.
+ */
+
+#include "armada-385.dtsi"
+
+/ {
+	compatible = "marvell,a385-nbhw17", "marvell,armada385", "marvell,armada380";
+
+	chosen {
+		bootargs = "console=ttyS0,115200 earlyprintk";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x40000000>; /* 1 GB */
+	};
+
+	netmodule-system-info {
+		compatible = "netmodule,system-info";
+		hardware-base = <17>;
+	};
+
+	soc {
+		ranges = <MBUS_ID(0xf0, 0x01) 0 0xf1000000 0x100000
+			  MBUS_ID(0x01, 0x1d) 0 0xfff00000 0x100000
+			  MBUS_ID(0x09, 0x19) 0 0xf1100000 0x10000 /* CESA 0 SRAM */
+			  MBUS_ID(0x09, 0x15) 0 0xf1110000 0x10000 /* CESA 1 SRAM */
+			  MBUS_ID(0x01, 0x3e) 0 0xfd000000 0x20000>; /* Devbus CS0 */
+
+		devbus-cs0 {
+			status = "okay";
+			ranges = <0 MBUS_ID(0x01, 0x3e) 0 0x20000>;
+			devbus,keep-config;
+		};
+
+		internal-regs {
+
+			eth0: ethernet@70000 {
+				status = "disabled";
+				phy-mode = "rgmii";
+			};
+
+			eth1: ethernet@30000 {
+				status = "disabled";
+				phy-mode = "sgmii";
+				phy = <&phy0>;
+			};
+
+			eth2: ethernet@34000 {
+				status = "disabled";
+				phy-mode = "sgmii";
+				phy = <&phy1>;
+			};
+
+			mdio@72004 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&mdio_pins>;
+
+				phy0: ethernet-phy@0 {
+					reg = <0>;
+					/* Set blink mode */
+					marvell,reg-init = <3 16 0x0 0x1032
+										3 17 0x0 0x4405
+										3 18 0x0 0x4A08>;
+				};
+
+				phy1: ethernet-phy@1 {
+					reg = <1>;
+					/* Set blink mode */
+					marvell,reg-init = <3 16 0x0 0x1032
+										3 17 0x0 0x4405
+										3 18 0x0 0x4A08>;
+				};
+			};
+
+			vcc3v3: fixedregulator@0 {
+				compatible = "regulator-fixed";
+				regulator-min-microvolt = <2048000>;
+				regulator-max-microvolt = <2048000>;
+			};
+
+			i2c0: i2c@11000 {
+				status = "okay";
+				clock-frequency = <100000>;
+
+				lm75@48 {
+					compatible = "national,lm75";
+					reg = <0x48>;
+				};
+
+				eeprom_cm@50 {
+					compatible = "at24,24c64";
+					reg = <0x50>;
+				};
+
+				adc_power@6bc {
+					compatible = "maxim,max11647";
+					reg = <0x36>;
+					#io-channel-cells = <1>;
+					vcc-supply = <&vcc3v3>;
+				};
+
+				rtc@68 {
+					compatible = "dallas,ds1339";
+					reg = <0x68>;
+				};
+			};
+
+			i2c1: i2c@11100 {
+				status = "disabled";
+			};
+
+			sata@a8000 {
+				status = "okay";
+			};
+
+			// Never ever enable this SATA controller on A385/A380 !
+			sata@e0000 {
+				status = "disabled";
+			};
+
+			sdhci@d8000 {
+				broken-cd;
+				wp-inverted;
+				no-1-8-v;
+				bus-width = <8>;
+				status = "okay";
+			};
+
+			serial@12000 {
+				status = "okay";
+			};
+
+			serial@12100 {
+				status = "okay";
+			};
+
+			usb@50000 {
+				status = "okay";
+			};
+
+			usb3@f0000 {
+				status = "okay";
+			};
+
+			usb3@f8000 {
+				status = "okay";
+			};
+
+			pinctrl {
+				pic_pins: pic-pins-0 {
+					marvell,pins = "mpp20", "mpp24", "mpp27", "mpp29", "mpp41", "mpp44",
+					"mpp47", "mpp51", "mpp56";
+					marvell,function = "gpio";
+				};
+			};
+
+
+			gpiofpga: gpio@fd000000 {
+				compatible = "netmodule,nbhw08-fpga-gpio";
+				reg = <0xfd000000 0x20000>;
+				ngpios = <71>;
+				gpio-controller;
+				#gpio-cells = <2>;
+			};
+
+			gpio-poweroff {
+				compatible = "gpio-poweroff";
+				gpios = <&gpiofpga 56 0>;
+			};
+
+			leds {
+				compatible = "gpio-leds";
+				status-green {
+					label = "status:green";
+					 gpios = <&gpiofpga 0 0>;
+				};
+				status-red {
+					label = "status:red";
+					 gpios = <&gpiofpga 1 0>;
+				};
+				ind1-green {
+					label = "ind1:green";
+					 gpios = <&gpiofpga 2 0>;
+				};
+				ind1-red {
+					label = "ind1:red";
+					 gpios = <&gpiofpga 3 0>;
+				};
+				ind2-green {
+					label = "ind2:green";
+					 gpios = <&gpiofpga 4 0>;
+				};
+				ind2-red {
+					label = "ind2:red";
+					 gpios = <&gpiofpga 5 0>;
+				};
+				ind3-green {
+					label = "ind3:green";
+					 gpios = <&gpiofpga 6 0>;
+				};
+				ind3-red {
+					label = "ind3:red";
+					 gpios = <&gpiofpga 7 0>;
+				};
+				ind4-green {
+					label = "ind4:green";
+					 gpios = <&gpiofpga 8 0>;
+				};
+				ind4-red {
+					label = "ind4:red";
+					 gpios = <&gpiofpga 9 0>;
+				};
+				ind5-green {
+					label = "ind5:green";
+					 gpios = <&gpiofpga 10 0>;
+				};
+				ind5-red {
+					label = "ind5:red";
+					 gpios = <&gpiofpga 11 0>;
+				};
+				ind6-green {
+					label = "ind6:green";
+					 gpios = <&gpiofpga 12 0>;
+				};
+				ind6-red {
+					label = "ind6:red";
+					 gpios = <&gpiofpga 13 0>;
+				};
+				ind7-green {
+					label = "ind7:green";
+					 gpios = <&gpiofpga 14 0>;
+				};
+				ind7-red {
+					label = "ind7:red";
+					 gpios = <&gpiofpga 15 0>;
+				};
+			};
+		};
+
+		gpio-keys {
+			compatible = "gpio-keys";
+
+			reset-button {
+				label = "Reset button";
+					gpios = <&gpio1 24 0>;
+					linux,code = <0x198>; /* KEY_RESTART */
+			};
+		};
+
+		pcie-controller {
+			status = "okay";
+			/*
+			 * The two PCIe units are accessible through
+			 * standard PCIe slots on the board.
+			 */
+			pcie@3,0 {
+				/* Port 2, Lane 0 */
+				status = "okay";
+			};
+			pcie@1,0 {
+				/* Port 0, Lane 0 */
+				status = "okay";
+			};
+		};
+	};
+};
