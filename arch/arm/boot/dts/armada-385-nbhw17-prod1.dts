@@ -15,16 +15,13 @@
 
 / {
 	model = "NB2800 based on Marvell Armada A385 NBHW17";
-
-	soc {
-		internal-regs {
-			eth1: ethernet@30000 {
-				status = "okay";
-			};
-
-			eth2: ethernet@34000 {
-				status = "okay";
-			};
-		};
-	};
 };
+
+&eth1 {
+	status = "okay";
+};
+
+&eth2 {
+	status = "okay";
+};
+

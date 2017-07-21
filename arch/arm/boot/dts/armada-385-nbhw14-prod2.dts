@@ -22,10 +22,9 @@
 &mdio {
 	/* DSA on RGMII/MII uses MAC0 as corresponding MAC */
 	dsa: dsa@0 {
+		compatible = "marvell,mv88e6085";
 		#address-cells = <1>;
 		#size-cells = <0>;
-
-		compatible = "marvell,mv88e6085";
 		reg = <0>;
 
 		ports {
@@ -71,4 +70,8 @@
 
 &eth1 {
 	status = "okay";
+	fixed-link {
+		speed = <1000>;
+		full-duplex;
+	};
 };

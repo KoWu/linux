@@ -10,6 +10,7 @@
  * warranty of any kind, whether express or implied.
  */
 
+#include <dt-bindings/gpio/gpio.h>
 #include "armada-385.dtsi"
 
 / {
@@ -32,172 +33,18 @@
 			  MBUS_ID(0x09, 0x15) 0 0xf1110000 0x10000 /* CESA 1 SRAM */
 			  MBUS_ID(0x01, 0x3e) 0 0xfd000000 0x20000>; /* Devbus CS0 */
 
-		devbus-cs0 {
+		fpga: devbus-cs0 {
 			status = "okay";
 			ranges = <0 MBUS_ID(0x01, 0x3e) 0 0x20000>;
 			devbus,keep-config;
 		};
 
 		internal-regs {
-			i2c0: i2c@11000 {
-				status = "okay";
-				clock-frequency = <100000>;
-
-				lm75@48 {
-					compatible = "national,lm75";
-					reg = <0x48>;
-				};
-
-				eeprom_cm@50 {
-					compatible = "at24,24c64";
-					reg = <0x50>;
-				};
-
-				eeprom_mc@51 {
-					compatible = "at24,24c64";
-					reg = <0x51>;
-				};
-
-				eeprom_pse@52 {
-					compatible = "at24,24c64";
-					reg = <0x52>;
-				};
-
-				rtc@68 {
-					compatible = "dallas,ds1339";
-					reg = <0x68>;
-				};
-
-				ioext@76 {
-					compatible = "netmodule,nbhw14-ioext";
-					reg = <0x76>;
-				};
-			};
-
-			i2c1: i2c@11100 {
-				status = "disabled";
-				clock-frequency = <100000>;
-			};
-
-
-			sata@a8000 {
-				status = "okay";
-			};
-
-			sata@e0000 {
-				/* Never enable this controller on an ARMADA 385,
-				 * this will lead to a crash */
-				status = "disabled";
-			};
-
-			sdhci@d8000 {
-				broken-cd;
-				wp-inverted;
-				no-1-8-v;
-				bus-width = <8>;
-				status = "okay";
-			};
-
-			serial@12000 {
-				status = "okay";
-			};
-
-			usb@50000 {
-				status = "okay";
-			};
-
-			usb3@f0000 {
-				status = "okay";
-			};
-
-			usb3@f8000 {
-				status = "okay";
-			};
-
 			pinctrl {
 				pic_pins: pic-pins-0 {
 					marvell,pins = "mpp33", "mpp34", "mpp35";
 					marvell,function = "gpio";
 				};
-			};
-
-
-			gpiofpga: gpio@fd000000 {
-				compatible = "netmodule,nbhw08-fpga-gpio";
-				reg = <0xfd000000 0x20000>;
-				ngpios = <71>;
-				gpio-controller;
-				#gpio-cells = <2>;
-			};
-
-			leds {
-				compatible = "gpio-leds";
-				status-green {
-					label = "status:green";
-					 gpios = <&gpiofpga 0 0>;
-				};
-				status-red {
-					label = "status:red";
-					 gpios = <&gpiofpga 1 0>;
-				};
-				ind1-green {
-					label = "ind1:green";
-					 gpios = <&gpiofpga 2 0>;
-				};
-				ind1-red {
-					label = "ind1:red";
-					 gpios = <&gpiofpga 3 0>;
-				};
-				ind2-green {
-					label = "ind2:green";
-					 gpios = <&gpiofpga 4 0>;
-				};
-				ind2-red {
-					label = "ind2:red";
-					 gpios = <&gpiofpga 5 0>;
-				};
-				ind3-green {
-					label = "ind3:green";
-					 gpios = <&gpiofpga 6 0>;
-				};
-				ind3-red {
-					label = "ind3:red";
-					 gpios = <&gpiofpga 7 0>;
-				};
-				ind4-green {
-					label = "ind4:green";
-					 gpios = <&gpiofpga 8 0>;
-				};
-				ind4-red {
-					label = "ind4:red";
-					 gpios = <&gpiofpga 9 0>;
-				};
-				ind5-green {
-					label = "ind5:green";
-					 gpios = <&gpiofpga 10 0>;
-				};
-				ind5-red {
-					label = "ind5:red";
-					 gpios = <&gpiofpga 11 0>;
-				};
-				ind6-green {
-					label = "ind6:green";
-					 gpios = <&gpiofpga 12 0>;
-				};
-				ind6-red {
-					label = "ind6:red";
-					 gpios = <&gpiofpga 13 0>;
-				};
-			};
-
-			crypto@90000 {
-				status = "okay";
-			 };
-
-			watchdog@20300 {
-				status = "okay";
-				interrupts = <&mpic 96>;
-				timeout-sec = <10>;
 			};
 		};
 
@@ -211,22 +58,61 @@
 			};
 		};
 
-		pcie-controller {
-			status = "okay";
-			/*
-			 * The two PCIe units are accessible through
-			 * standard PCIe slots on the board.
-			 */
-			pcie@4,0 {
-				/* Port 3, Lane 0 */
-				status = "okay";
-			};
-			pcie@3,0 {
-				/* Port 2, Lane 0 */
-				status = "okay";
-			};
-		};
 	};
+};
+
+&watchdog {
+	status = "okay";
+	interrupts = <&mpic 96>;
+	timeout-sec = <10>;
+};
+
+&cesa {
+	status = "okay";
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&i2c0 {
+	status = "okay";
+	clock-frequency = <100000>;
+
+	lm75@48 {
+		compatible = "national,lm75";
+		reg = <0x48>;
+	};
+
+	eeprom_cm@50 {
+		compatible = "at24,24c64";
+		reg = <0x50>;
+	};
+
+	eeprom_mc@51 {
+		compatible = "at24,24c64";
+		reg = <0x51>;
+	};
+
+	eeprom_pse@52 {
+		compatible = "at24,24c64";
+		reg = <0x52>;
+	};
+
+	rtc@68 {
+		compatible = "dallas,ds1339";
+		reg = <0x68>;
+	};
+
+	ioext@76 {
+		compatible = "netmodule,nbhw14-ioext";
+		reg = <0x76>;
+	};
+};
+
+&i2c1 {
+	status = "disabled";
+	clock-frequency = <100000>;
 };
 
 &mdio {
@@ -246,3 +132,372 @@
 	phy-mode = "rgmii";
 };
 
+&ahci0 {
+	status = "okay";
+};
+
+// Never ever enable this SATA controller on A385/A380 !
+&ahci1 {
+	status = "disabled";
+};
+
+&usb0 {
+	status = "okay";
+};
+
+&usb3_0 {
+	status = "okay";
+};
+
+&usb3_1 {
+	status = "okay";
+};
+
+&sdhci {
+	broken-cd;
+	wp-inverted;
+	no-1-8-v;
+	bus-width = <8>;
+	status = "okay";
+};
+
+&pciec {
+	status = "okay";
+};
+
+/*
+ * The two PCIe units are accessible through
+ * standard PCIe slots on the board.
+ */
+&pcie4 {
+	/* Port 3, Lane 0 */
+	status = "okay";
+};
+
+&pcie3 {
+	/* Port 2, Lane 0 */
+	status = "okay";
+};
+
+&fpga {
+	gpio_leds: gpio@20 {
+		compatible = "wd,mbl-gpio";
+		reg-names = "dat";
+		reg = <0x20 2>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
+
+	gpio_pcie_rst: gpio@30 {
+		compatible = "wd,mbl-gpio";
+		reg-names = "dat";
+		reg = <0x30 2>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-line-names =
+			"PCIE1 RST~", "PCIE2 RST~",
+			"PCIE3 RST~", "PCIE4 RST~",
+			"PCIE5 RST~", "PCIE6 RST~",
+			"", "",
+			"", "", "", "",
+			"", "", "", "";
+	};
+
+	gpio_pcie_pwr: gpio@32 {
+		compatible = "wd,mbl-gpio";
+		reg-names = "dat";
+		reg = <0x32 2>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-line-names =
+			"PCIE1 PWR", "PCIE2 PWR",
+			"PCIE3 PWR", "PCIE4 PWR",
+			"PCIE5 PWR", "PCIE6 PWR",
+			"", "",
+			"", "", "", "",
+			"", "", "", "";
+	};
+
+	gpio_sim_ctl: gpio@40 {
+		compatible = "wd,mbl-gpio";
+		reg-names = "dat";
+		reg = <0x40 2>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-line-names =
+			"SIM1-EN", "SIM1-SEL0",
+			"SIM2-EN", "SIM2-SEL0",
+			"SIM3-EN", "SIM3-SEL0",
+			"SIM4-EN", "SIM4-SEL0",
+			"SIM1-SEL1", "SIM2-SEL1",
+			"SIM3-SEL1", "SIM4-SEL1",
+			"", "", "", "";
+	};
+
+	/* A SIM is connected to a SIMBUS.
+	 * SIMBUS1 can only be connecte to Slot 1 or 3
+	 * SIMBUS4 can only be connected to Slot 5 or 6
+	 * Only NBHW14 has this speicallity, NBHW17 does
+	 * not need the bus/slot mapping because each slot
+	 * can be connected to each sim.
+	 */
+	gpio_simbus_ctl: gpio@42 {
+		compatible = "wd,mbl-gpio";
+		reg-names = "dat";
+		reg = <0x42 2>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		gpio-line-names =
+			"SIM13-EN", "SIM13-SEL",
+			"SIM56-EN", "SIM56-SEL",
+			"", "", "", "",
+			"", "", "", "",
+			"", "", "", "";
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		status-green {
+			label = "status:green";
+			gpios = <&gpio_leds 0 0>;
+		};
+		status-red {
+			label = "status:red";
+			gpios = <&gpio_leds 1 0>;
+		};
+		ind1-green {
+			label = "ind1:green";
+			gpios = <&gpio_leds 2 0>;
+		};
+		ind1-red {
+			label = "ind1:red";
+			gpios = <&gpio_leds 3 0>;
+		};
+		ind2-green {
+			label = "ind2:green";
+			gpios = <&gpio_leds 4 0>;
+		};
+		ind2-red {
+			label = "ind2:red";
+			gpios = <&gpio_leds 5 0>;
+		};
+		ind3-green {
+			label = "ind3:green";
+			gpios = <&gpio_leds 6 0>;
+		};
+		ind3-red {
+			label = "ind3:red";
+			gpios = <&gpio_leds 7 0>;
+		};
+		ind4-green {
+			label = "ind4:green";
+			gpios = <&gpio_leds 8 0>;
+		};
+		ind4-red {
+			label = "ind4:red";
+			gpios = <&gpio_leds 9 0>;
+		};
+		ind5-green {
+			label = "ind5:green";
+			gpios = <&gpio_leds 10 0>;
+		};
+		ind5-red {
+			label = "ind5:red";
+			gpios = <&gpio_leds 11 0>;
+		};
+		ind6-green {
+			label = "ind6:green";
+			gpios = <&gpio_leds 12 0>;
+		};
+		ind6-red {
+			label = "ind6:red";
+			gpios = <&gpio_leds 13 0>;
+		};
+	};
+
+	/* LEDs are not the correct desginator for this.
+	 * But there is no driver that actually has the
+	 * correct name for our purpose. For now the LED
+	 * driver does exactly what we want to do...
+	 */ 
+	simctl {
+		compatible = "gpio-leds";
+		sim1-en {
+			label = "sim1:en";
+			gpios = <&gpio_sim_ctl 0 0>;
+			default-state = "keep";
+		};
+
+		sim2-en {
+			label = "sim2:en";
+			gpios = <&gpio_sim_ctl 2 0>;
+			default-state = "keep";
+		};
+	
+		sim3-en {
+			label = "sim3:en";
+			gpios = <&gpio_sim_ctl 4 0>;
+			default-state = "keep";
+		};
+	
+		sim4-en {
+			label = "sim4:en";
+			gpios = <&gpio_sim_ctl 6 0>;
+			default-state = "keep";
+		};
+
+		sim1-sel0 {
+			label = "sim1:sel0";
+			gpios = <&gpio_sim_ctl 1 0>;
+			default-state = "keep";
+		};
+
+		sim2-sel0 {
+			label = "sim2:sel0";
+			gpios = <&gpio_sim_ctl 3 0>;
+			default-state = "keep";
+		};
+	
+		sim3-sel0 {
+			label = "sim3:sel0";
+			gpios = <&gpio_sim_ctl 5 0>;
+			default-state = "keep";
+		};
+	
+		sim4-sel0 {
+			label = "sim4:sel0";
+			gpios = <&gpio_sim_ctl 7 0>;
+			default-state = "keep";
+		};
+
+		sim1-sel1 {
+			label = "sim1:sel1";
+			gpios = <&gpio_sim_ctl 8 0>;
+			default-state = "keep";
+		};
+
+		sim2-sel1 {
+			label = "sim2:sel1";
+			gpios = <&gpio_sim_ctl 9 0>;
+			default-state = "keep";
+		};
+	
+		sim3-sel1 {
+			label = "sim3:sel1";
+			gpios = <&gpio_sim_ctl 10 0>;
+			default-state = "keep";
+		};
+	
+		sim4-sel1 {
+			label = "sim4:sel1";
+			gpios = <&gpio_sim_ctl 11 0>;
+			default-state = "keep";
+		};
+	};
+
+	simbusctl {
+		compatible = "gpio-leds";
+		simbus13-en {
+			label = "simbus13:en";
+			gpios = <&gpio_simbus_ctl 0 0>;
+			default-state = "keep";
+		};
+
+		simbus13-sel {
+			label = "simbus13:sel";
+			gpios = <&gpio_simbus_ctl 1 0>;
+			default-state = "keep";
+		};
+	
+		simbus56-en {
+			label = "simbus56:en";
+			gpios = <&gpio_simbus_ctl 2 0>;
+			default-state = "keep";
+		};
+	
+		simbus56-sel {
+			label = "simbus56:sel";
+			gpios = <&gpio_simbus_ctl 3 0>;
+			default-state = "keep";
+		};
+	};
+
+	pciepwr {
+		compatible = "gpio-leds";
+		pcie1-pwr {
+			label = "pcie1:pwr";
+			gpios = <&gpio_pcie_pwr 0 0>;
+			default-state = "keep";
+		};
+
+		pcie2-pwr {
+			label = "pcie2:pwr";
+			gpios = <&gpio_pcie_pwr 1 0>;
+			default-state = "keep";
+		};
+	
+		pcie3-pwr {
+			label = "pcie3:pwr";
+			gpios = <&gpio_pcie_pwr 2 0>;
+			default-state = "keep";
+		};
+	
+		pcie4-pwr {
+			label = "pcie4:pwr";
+			gpios = <&gpio_pcie_pwr 3 0>;
+			default-state = "keep";
+		};
+
+		pcie5-pwr {
+			label = "pcie5:pwr";
+			gpios = <&gpio_pcie_pwr 4 0>;
+			default-state = "keep";
+		};
+	
+		pcie6-pwr {
+			label = "pcie6:pwr";
+			gpios = <&gpio_pcie_pwr 5 0>;
+			default-state = "keep";
+		};
+
+	};
+
+	pcierst {
+		compatible = "gpio-leds";
+		pcie1-rst {
+			label = "pcie1:rst";
+			gpios = <&gpio_pcie_rst 0 GPIO_ACTIVE_LOW>;
+			default-state = "keep";
+		};
+
+		pcie2-rst {
+			label = "pcie2:rst";
+			gpios = <&gpio_pcie_rst 1 GPIO_ACTIVE_LOW>;
+			default-state = "keep";
+		};
+	
+		pcie3-rst {
+			label = "pcie3:rst";
+			gpios = <&gpio_pcie_rst 2 GPIO_ACTIVE_LOW>;
+			default-state = "keep";
+		};
+	
+		pcie4-rst {
+			label = "pcie4:rst";
+			gpios = <&gpio_pcie_rst 3 GPIO_ACTIVE_LOW>;
+			default-state = "keep";
+		};
+
+		pcie5-rst {
+			label = "pcie5:rst";
+			gpios = <&gpio_pcie_rst 4 GPIO_ACTIVE_LOW>;
+			default-state = "keep";
+		};
+	
+		pcie6-rst {
+			label = "pcie6:rst";
+			gpios = <&gpio_pcie_rst 5 GPIO_ACTIVE_LOW>;
+			default-state = "keep";
+		};
+	};
+};
