@@ -2351,6 +2351,19 @@ static int __init _init(struct omap_hwmod *oh, void *data)
 		else if (np && index)
 			pr_warn("omap_hwmod: %s using broken dt data from %s\n",
 				oh->name, np->name);
+
+	}
+
+	if (np) {
+		/* If a hw module is disabled the driver should not touch it. Timer modules
+		 * are disabled by software to hide them from the system. Therefore timers
+		 * should always be enabled. */
+		if (!of_device_is_available(np) &&
+		    strncmp("timer", oh->name, 5)) {
+			pr_debug("omap_hwmod: set %s as disabled\n", oh->name);
+			oh->_state = _HWMOD_STATE_DISABLED;
+			return 0;
+		}
 	}
 
 	r = _init_mpu_rt_base(oh, NULL, index, np);
