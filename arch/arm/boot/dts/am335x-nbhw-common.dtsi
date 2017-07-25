@@ -292,11 +292,6 @@
 	status = "okay";
 };
 
-&rtc {
-	ti,hwmod-disabled;
-	status = "disabled";
-};
-
 &wdt2 {
 	ti,hwmod-disabled;
 	status = "disabled";
@@ -327,3 +322,4 @@
 	ti,no-idle-on-init;
 };
 
+/delete-node/ &rtc;
