@@ -2346,8 +2346,11 @@ static int __init _init(struct omap_hwmod *oh, void *data)
 			return -ENODEV;
 
 		r = of_dev_hwmod_lookup(bus, oh, &index, &np);
-		if (r)
+		if (r) {
 			pr_debug("omap_hwmod: %s missing dt data\n", oh->name);
+			oh->_state = _HWMOD_STATE_DISABLED;
+			return 0;
+		}
 		else if (np && index)
 			pr_warn("omap_hwmod: %s using broken dt data from %s\n",
 				oh->name, np->name);
