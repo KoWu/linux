@@ -262,8 +262,9 @@
 
 	uart0_pins: pinmux_uart0_pins {
 		pinctrl-single,pins = <
-			0x170 ( PIN_INPUT_PULLUP | MUX_MODE0 ) /* (E15) uart0_rxd.uart0_rxd */
+			0x170 ( PIN_INPUT | MUX_MODE0 ) /* (E15) uart0_rxd.uart0_rxd */
 			0x174 ( PIN_OUTPUT_PULLUP | MUX_MODE0 ) /* (E16) uart0_txd.uart0_txd */
+			0x16c ( PIN_OUTPUT | MUX_MODE0 ) /* (E16) uart0_rts.uart0_rts */
 		>;
 	};
 
