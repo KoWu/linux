@@ -14,9 +14,21 @@
 	model = "NetModule NBHW16";
 	compatible = "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
 
-	netmodule-system-info {
-		compatible = "netmodule,system-info";
-		hardware-base = <16>;
+	cpus {
+		cpu@0 {
+			cpu0-supply = <&dcdc1>;
+			operating-points-v2 = <&cpu0_opp_table>;
+		};
+	};
+};
+
+&cpu0_opp_table {
+	opp50@300000000 {
+		opp-supported-hw = <0x00 0x0000>;
+	};
+
+	opp100@300000000 {
+		opp-supported-hw = <0x06 0x0010>;
 	};
 };
 
@@ -34,6 +46,10 @@
 
 &wlan_fixed {
 	gpio = <&gpio3 10 0>;
+};
+
+&wlcore {
+	compatible = "ti,wl1835";
 };
 
 &am33xx_pinmux {
