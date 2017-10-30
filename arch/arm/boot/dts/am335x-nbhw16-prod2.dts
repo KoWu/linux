@@ -47,6 +47,39 @@
 		pinctrl-0 = <&user_leds_s0>;
 		pinctrl-1 = <&user_leds_s0_sleep>;
 	};
+
+	// Can be enabled with devicetree overlays
+	shield_out {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&shield_output>;
+
+		status = "disabled";
+
+		led@1 {
+			label = "latch-en";
+			gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led@2 {
+			label = "rst-ext";
+			gpios = <&gpio1 27 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		led@3 {
+			label = "can0-term";
+			gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		led@4 {
+			label = "can1-term";
+			gpios = <&gpio1 8 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+	};
 };
 
 &cpu0_opp_table {
@@ -228,6 +261,16 @@
 		>;
 	};
 
+	shield_output: shield_output {
+		pinctrl-single,pins = <
+			0x06c ( PIN_OUTPUT | MUX_MODE7 ) /* (E17) gpmc_a11.gpio1.27*/
+			0x164 ( PIN_OUTPUT | MUX_MODE7 ) /* (C18) ecap0_in_pwm0_out.gpio0.7 */
+			0x168 ( PIN_OUTPUT | MUX_MODE7 ) /* (E18) uart0_ctsn.gpio1.8*/
+			0x16c ( PIN_INPUT | MUX_MODE7 ) /* (E17) uart0_rtsn.gpio1.9 not used*/
+			0x170 ( PIN_OUTPUT | MUX_MODE7 ) /* (E15) uart0_rxd.gpio1.10 */
+			0x174 ( PIN_INPUT | MUX_MODE7 ) /* (E16) uart0_txd.gpio1.11 not used*/
+		>;
+	};
 
 	ecap0_pins: backlight_pins {
 		pinctrl-single,pins = <
