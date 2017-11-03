@@ -64,7 +64,7 @@
 
 		led@2 {
 			label = "rst-ext";
-			gpios = <&gpio1 27 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio0 27 GPIO_ACTIVE_LOW>;
 			default-state = "off";
 		};
 
