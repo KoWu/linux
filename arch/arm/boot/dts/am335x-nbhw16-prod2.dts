@@ -48,12 +48,13 @@
 		pinctrl-1 = <&user_leds_s0_sleep>;
 	};
 
-	shield_fix {
+	// Can be enabled with devicetree overlay
+	shield_dualcan_fixgpio {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
-		pinctrl-0 = <&shield_mux_fix>;
+		pinctrl-0 = <&shield_mux_dualcan_fixgpio>;
 
-		status = "okay";
+		status = "disabled";
 
 		led@1 {
 			label = "latch-en";
@@ -68,11 +69,11 @@
 		};
 	};
 
-	// Can be enabled with devicetree overlays
-	shield_out {
+	// Can be enabled with devicetree overlay
+	shield_dualcan_dyngpio {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
-		pinctrl-0 = <&shield_output>;
+		pinctrl-0 = <&shield_mux_dualcan_dyngpio>;
 
 		status = "disabled";
 
@@ -87,6 +88,16 @@
 			gpios = <&gpio1 8 GPIO_ACTIVE_LOW>;
 			default-state = "off";
 		};
+	};
+
+	// Can be enabled with devicetree overlay
+	shield_comio_gpio {
+		// Use the gpio-leds only for the pingmuxing
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&shield_mux_comio_gpio>;
+
+		status = "disabled";
 	};
 };
 
@@ -269,7 +280,7 @@
 		>;
 	};
 
-	shield_mux_fix: shield_mux_fix {
+	shield_mux_dualcan_fixgpio: shield_mux_dualcan_fixgpio {
 		pinctrl-single,pins = <
 			0x06c ( PIN_OUTPUT | MUX_MODE7 ) /* (E17) gpmc_a11.gpio0.27*/
 			0x164 ( PIN_OUTPUT | MUX_MODE7 ) /* (C18) ecap0_in_pwm0_out.gpio0.7 */
@@ -277,12 +288,23 @@
 	};
 
 
-	shield_output: shield_output {
+	shield_mux_dualcan_dyngpio: shield_mux_dualcan_dyngpio {
 		pinctrl-single,pins = <
 			0x168 ( PIN_OUTPUT | MUX_MODE7 ) /* (E18) uart0_ctsn.gpio1.8*/
 			0x16c ( PIN_INPUT | MUX_MODE7 ) /* (E17) uart0_rtsn.gpio1.9 not used*/
 			0x170 ( PIN_OUTPUT | MUX_MODE7 ) /* (E15) uart0_rxd.gpio1.10 */
 			0x174 ( PIN_INPUT | MUX_MODE7 ) /* (E16) uart0_txd.gpio1.11 not used*/
+		>;
+	};
+
+	shield_mux_comio_gpio: shield_mux_comio_gpio{
+		pinctrl-single,pins = <
+			0x06c ( PIN_INPUT | MUX_MODE7 ) /* (E17) gpmc_a11.gpio0.27 */
+			0x164 ( PIN_INPUT | MUX_MODE7 ) /* (C18) ecap0_in_pwm0_out.gpio0.7 */
+			0x168 ( PIN_INPUT | MUX_MODE7 ) /* (E18) uart0_ctsn.gpio1.8 */
+			0x16c ( PIN_INPUT | MUX_MODE7 ) /* (E17) uart0_rtsn.gpio1.9 */
+			0x170 ( PIN_INPUT | MUX_MODE7 ) /* (E15) uart0_rxd.gpio1.10 */
+			0x174 ( PIN_INPUT | MUX_MODE7 ) /* (E16) uart0_txd.gpio1.11 */
 		>;
 	};
 
