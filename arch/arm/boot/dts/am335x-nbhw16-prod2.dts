@@ -282,7 +282,7 @@
 
 	shield_mux_dualcan_fixgpio: shield_mux_dualcan_fixgpio {
 		pinctrl-single,pins = <
-			0x06c ( PIN_OUTPUT | MUX_MODE7 ) /* (E17) gpmc_a11.gpio0.27*/
+			0x02c ( PIN_OUTPUT | MUX_MODE7 ) /* (U12) gpmc_ad11.gpio0.27*/
 			0x164 ( PIN_OUTPUT | MUX_MODE7 ) /* (C18) ecap0_in_pwm0_out.gpio0.7 */
 		>;
 	};
@@ -299,7 +299,7 @@
 
 	shield_mux_comio_gpio: shield_mux_comio_gpio{
 		pinctrl-single,pins = <
-			0x06c ( PIN_INPUT | MUX_MODE7 ) /* (E17) gpmc_a11.gpio0.27 */
+			0x02c ( PIN_INPUT | MUX_MODE7 ) /* (U12) gpmc_ad11.gpio0.27 */
 			0x164 ( PIN_INPUT | MUX_MODE7 ) /* (C18) ecap0_in_pwm0_out.gpio0.7 */
 			0x168 ( PIN_INPUT | MUX_MODE7 ) /* (E18) uart0_ctsn.gpio1.8 */
 			0x16c ( PIN_INPUT | MUX_MODE7 ) /* (E17) uart0_rtsn.gpio1.9 */
